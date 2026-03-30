@@ -1,0 +1,15 @@
+{
+  "name": "@hq/actions",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@hq/db": "workspace:*",
+    "@hq/objects": "workspace:*",
+    "zod": "^3.0.0"
+  },
+  "license": "MIT"
+}

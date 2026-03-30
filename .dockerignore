@@ -1,0 +1,25 @@
+.git
+.gitignore
+.DS_Store
+
+node_modules
+.pnpm-store
+**/node_modules
+
+.next
+**/.next
+**/dist
+**/build
+**/.turbo
+
+.env
+.env.*
+
+# Workspace-only — not needed in any Docker build
+scripts/
+data/
+memory/
+skills/
+docs/
+marketing/
+shared/assets/

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <defs>
+    <!-- Main stroke gradient -->
+    <linearGradient id="brand-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#52CCAF"/>
+      <stop offset="100%" stop-color="#147060"/>
+    </linearGradient>
+
+    <!-- Glow stroke: same direction, fades to transparent at the dark end -->
+    <!-- Gives a natural bloom only where the light is — no tacky uniform glow -->
+    <linearGradient id="glow-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#52CCAF" stop-opacity="0.14"/>
+      <stop offset="55%"  stop-color="#52CCAF" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#147060" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Glow layer: wider, behind, semi-transparent -->
+  <circle cx="35" cy="50" r="28" fill="none" stroke="url(#glow-gradient)" stroke-width="11"/>
+  <circle cx="65" cy="50" r="28" fill="none" stroke="url(#glow-gradient)" stroke-width="11"/>
+
+  <!-- Main crisp stroke on top -->
+  <circle cx="35" cy="50" r="28" fill="none" stroke="url(#brand-gradient)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="65" cy="50" r="28" fill="none" stroke="url(#brand-gradient)" stroke-width="7" stroke-linecap="round"/>
+</svg>

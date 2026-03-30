@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: hq
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
+    restart: always
+
+  workshop:
+    build:
+      context: .
+      dockerfile: apps/workshop/Dockerfile
+    env_file: .env
+    ports:
+      - "3002:3002"
+    depends_on:
+      - api
+    restart: always
+
+volumes:
+  postgres_data:

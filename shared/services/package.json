@@ -1,0 +1,14 @@
+{
+  "name": "@hq/services",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@hq/db": "workspace:*",
+    "@hq/auth": "workspace:*"
+  },
+  "license": "MIT"
+}
