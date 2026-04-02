@@ -22,7 +22,7 @@ export function getApiBaseUrl(): string {
     }
     // Fallback: derive from current window location
     const host = window.location.hostname;
-    // If we're on a deployed server (e.g. 76.13.241.77 on 4002), the API is on 4003
+    // If we're on a deployed server (e.g. your-server-ip on 4002), the API is on 4003
     if (window.location.port === '4002') return `http://${host}:4003`;
     // If dev server (3002), API is 3003
     if (window.location.port === '3002') return `http://${host}:3003`;

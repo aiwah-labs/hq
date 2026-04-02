@@ -68,9 +68,9 @@ createuser aiwah || true
 createdb aiwah_dev -O aiwah || true
 psql -d postgres -c "ALTER USER aiwah WITH PASSWORD 'aiwah_dev';"
 export DATABASE_URL="postgresql://aiwah:aiwah_dev@localhost:5432/aiwah_dev?schema=public"
-export SUPERADMIN_EMAIL_ALLOWLIST="aiwahlabs@gmail.com"
-export SEED_EMAIL="aiwahlabs@gmail.com"
-export SEED_PASSWORD="Tempura@2026"
+export SUPERADMIN_EMAIL_ALLOWLIST="admin@example.com"
+export SEED_EMAIL="admin@example.com"
+export SEED_PASSWORD="changeme"
 pnpm db:local:env
 pnpm db:migrate
 pnpm db:seed
@@ -84,9 +84,9 @@ sudo systemctl start postgresql
 sudo -u postgres psql -c "CREATE ROLE aiwah LOGIN PASSWORD 'aiwah_dev';" || true
 sudo -u postgres psql -c "CREATE DATABASE aiwah_dev OWNER aiwah;" || true
 export DATABASE_URL="postgresql://aiwah:aiwah_dev@localhost:5432/aiwah_dev?schema=public"
-export SUPERADMIN_EMAIL_ALLOWLIST="aiwahlabs@gmail.com"
-export SEED_EMAIL="aiwahlabs@gmail.com"
-export SEED_PASSWORD="Tempura@2026"
+export SUPERADMIN_EMAIL_ALLOWLIST="admin@example.com"
+export SEED_EMAIL="admin@example.com"
+export SEED_PASSWORD="changeme"
 pnpm db:local:env
 pnpm db:migrate
 pnpm db:seed

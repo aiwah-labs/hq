@@ -2,7 +2,7 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-const DEV_DEFAULT_SUPERADMIN_EMAIL = 'aiwahlabs@gmail.com';
+const DEV_DEFAULT_SUPERADMIN_EMAIL = 'admin@example.com';
 
 export function getSuperadminAllowlist(): Set<string> {
   const configured = process.env.SUPERADMIN_EMAIL_ALLOWLIST;
