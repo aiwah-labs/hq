@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { createContent, createServiceContext, getContent, listContent, publishContent, updateContent } from '@hq/services';

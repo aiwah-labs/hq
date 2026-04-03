@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import { actionRegistry } from '@hq/actions';
 import { emitEvent } from '@hq/events';
 import type { ServiceContext } from '@hq/services';

@@ -1,11 +1,31 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "strict": true,
     "jsx": "preserve",
-    "lib": ["ES2022", "DOM"]
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

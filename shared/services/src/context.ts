@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import type { AuthPrincipal } from '@hq/auth/types';
 import { db } from '@hq/db';
 

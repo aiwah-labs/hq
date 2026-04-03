@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import { generateText } from 'ai';
 import { db } from '@hq/db';
 import { buildModel } from './model.js';

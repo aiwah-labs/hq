@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hq/db": "workspace:*",
@@ -20,9 +21,10 @@
     "@fastify/cors": "^10.0.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "vitest": "^2.0.0"
   },
   "license": "MIT"
 }
