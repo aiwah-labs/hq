@@ -14,5 +14,8 @@
   "license": "MIT",
   "scripts": {
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
   }
 }
