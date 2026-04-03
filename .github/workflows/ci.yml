@@ -38,6 +38,8 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -54,9 +56,11 @@ jobs:
       - name: Run DB migrations
         run: pnpm db:migrate:prod
 
-      # Type-check disabled until workspace path resolution is fixed (Issue #9)
-      # - name: Type-check
-      #   run: pnpm typecheck
+      # Cross-package TypeScript path resolution fixed by #9
+      # Pre-existing type errors remain — tracked in #10
+      - name: Type-check
+        run: pnpm typecheck
+        continue-on-error: true
 
       # Some pre-existing test failures exist (Issue #10) — tracked for fix
       # continue-on-error: true is temporary until Issue #10 is resolved
