@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@hq/actions": ["./shared/actions/src/index.ts"],
+      "@hq/agents": ["./shared/agents/src/index.ts"],
+      "@hq/api-client": ["./shared/api-client/src/index.ts"],
+      "@hq/auth": ["./shared/auth/src/index.ts"],
+      "@hq/db": ["./shared/db/src/index.ts"],
+      "@hq/events": ["./shared/events/src/index.ts"],
+      "@hq/jobs": ["./shared/jobs/src/index.ts"],
+      "@hq/objects": ["./shared/objects/src/index.ts"],
+      "@hq/services": ["./shared/services/src/index.ts"],
+      "@hq/storage": ["./shared/storage/src/index.ts"],
+      "@hq/workflows": ["./shared/workflows/src/index.ts"]
+    }
+  }
+}

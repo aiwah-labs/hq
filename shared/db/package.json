@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "deploy": "prisma migrate deploy",
@@ -14,6 +15,7 @@
     "@prisma/client": "^6.0.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "prisma": "^6.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
