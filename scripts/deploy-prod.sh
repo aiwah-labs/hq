@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "Pulling latest changes..."
-git pull origin main
+git pull origin ${DEPLOY_BRANCH:-main}
 
 echo "Building updated images..."
 docker compose -f docker-compose.prod.yml --env-file .env.prod build
