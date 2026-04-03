@@ -19,5 +19,9 @@
     "test": "vitest run",
     "typecheck": "pnpm -r --if-present run typecheck"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "@types/node": "^22.0.0"
+  }
 }
