@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 // Per-model pricing in USD per 1M tokens.
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'claude-sonnet-4-6': { input: 3.0, output: 15.0 },

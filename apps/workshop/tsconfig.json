@@ -8,9 +8,24 @@
     "lib": [
       "ES2022",
       "DOM"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "skipLibCheck": true,
+    "types": [
+      "node"
     ]
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

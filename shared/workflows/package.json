@@ -7,14 +7,19 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@hq/actions": "workspace:*",
+    "@hq/agents": "workspace:*",
     "@hq/db": "workspace:*",
-    "@hq/actions": "workspace:*"
+    "@hq/events": "workspace:*",
+    "@hq/services": "workspace:*"
   },
   "license": "MIT",
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
   }
 }

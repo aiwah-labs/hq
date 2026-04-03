@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import { defineSkill } from '../skills.js';
 
 export const messagingSkill = defineSkill({

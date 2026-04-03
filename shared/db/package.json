@@ -19,5 +19,9 @@
     "typescript": "^5.0.0",
     "@types/node": "^22.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
 }

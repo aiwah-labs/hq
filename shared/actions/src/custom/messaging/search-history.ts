@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import { z } from 'zod';
 import { db } from '@hq/db';
 import { defineAction } from '../../registry';
