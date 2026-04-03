@@ -1,19 +1,18 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "Deploying production..."
-cd /opt/aiwah-hq
+cd "$(dirname "$0")/.."
 
-echo "Fetching latest changes..."
-git fetch origin
+echo "Pulling latest changes..."
+git pull origin main
 
-echo "Resetting to production branch..."
-git reset --hard origin/production
-
-echo "Building images..."
+echo "Building updated images..."
 docker compose -f docker-compose.prod.yml --env-file .env.prod build
 
-echo "Starting containers..."
+echo "Running migrations..."
+docker compose -f docker-compose.prod.yml --env-file .env.prod run --rm api pnpm db:migrate:prod
+
+echo "Restarting services..."
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 echo "Deployment complete!"
