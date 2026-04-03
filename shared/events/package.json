@@ -7,7 +7,16 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@hq/db": "workspace:*"
+    "@hq/db": "workspace:*",
+    "@hq/services": "workspace:*"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  }
 }

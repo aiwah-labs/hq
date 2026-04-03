@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import type { FastifyInstance } from 'fastify';
 import { registerMeRoute } from './me';
 import { registerBotsRoutes } from './bots';

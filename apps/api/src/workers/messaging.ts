@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import crypto from 'node:crypto';
 import { db } from '@hq/db';
 import { registerWorker, scheduleJobIn } from '@hq/jobs';

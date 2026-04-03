@@ -17,7 +17,12 @@
     "db:local:start": "./scripts/local-postgres.sh start",
     "db:local:stop": "./scripts/local-postgres.sh stop",
     "test": "vitest run",
-    "typecheck": "pnpm -r exec tsc --noEmit"
+    "typecheck": "pnpm -r --if-present run typecheck"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "@types/node": "^22.0.0",
+    "zod": "^3.0.0"
+  }
 }

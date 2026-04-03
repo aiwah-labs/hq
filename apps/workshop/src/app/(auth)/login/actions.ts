@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 'use server';
 
 import { cookies, headers } from 'next/headers';

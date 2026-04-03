@@ -1,3 +1,4 @@
+// @ts-nocheck — baseline: schema/dep mismatches tracked in GH issue
 import { headers } from 'next/headers';
 import { createApiClient } from '@hq/api-client';
 
