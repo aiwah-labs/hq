@@ -12,15 +12,31 @@ git clone https://github.com/aiwah-labs/hq
 
 ## Getting started
 
-Clone the repo and point a coding agent at it — Claude Code, Cursor, Codex, or any agent that can read and write code. Tell it what your business does and what you need. The platform is designed to be extended through conversation.
+### Local development
+
+Prerequisites: Node.js 22+, pnpm 10+, Docker (for Postgres)
 
 ```bash
 git clone https://github.com/aiwah-labs/hq
 cd hq
-pnpm install
-cp .env.example .env
-pnpm db:local:bootstrap
-pnpm dev:platform
+make setup
+make dev
+```
+
+Workshop runs at http://localhost:3002 · API at http://localhost:3003
+
+### Production deployment
+
+See [DEPLOY.md](./DEPLOY.md) for the full guide. The short version:
+
+```bash
+# On a fresh Ubuntu VPS
+curl -fsSL https://raw.githubusercontent.com/aiwah-labs/hq/main/scripts/setup-server.sh | bash
+git clone https://github.com/aiwah-labs/hq /opt/hq
+cd /opt/hq && cp .env.example .env.prod
+# edit .env.prod
+bash scripts/first-deploy.sh
+bash scripts/setup-nginx.sh your-domain.com
 ```
 
 ---
