@@ -15,7 +15,9 @@
     "db:studio": "pnpm --filter @hq/db exec prisma studio",
     "db:local:bootstrap": "./scripts/local-postgres.sh bootstrap",
     "db:local:start": "./scripts/local-postgres.sh start",
-    "db:local:stop": "./scripts/local-postgres.sh stop"
+    "db:local:stop": "./scripts/local-postgres.sh stop",
+    "test": "vitest run",
+    "typecheck": "pnpm -r exec tsc --noEmit"
   },
   "license": "MIT"
 }
