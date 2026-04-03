@@ -10,5 +10,8 @@
     "@hq/db": "workspace:*",
     "@hq/auth": "workspace:*"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
 }

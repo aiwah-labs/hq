@@ -17,7 +17,7 @@
     "db:local:start": "./scripts/local-postgres.sh start",
     "db:local:stop": "./scripts/local-postgres.sh stop",
     "test": "vitest run",
-    "typecheck": "pnpm -r exec tsc --noEmit"
+    "typecheck": "pnpm -r --if-present run typecheck"
   },
   "license": "MIT"
 }

@@ -11,5 +11,8 @@
     "@hq/actions": "workspace:*",
     "ai": "^4.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
 }

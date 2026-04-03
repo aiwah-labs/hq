@@ -11,5 +11,8 @@
     "@hq/objects": "workspace:*",
     "zod": "^3.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
 }
