@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+[ "$EUID" -eq 0 ] || { echo "Run as root (sudo or root user)"; exit 1; }
+
 echo "[1/4] Installing Docker..."
 apt-get update -qq
 apt-get install -y ca-certificates curl gnupg
