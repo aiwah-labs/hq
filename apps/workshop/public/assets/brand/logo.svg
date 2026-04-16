@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <defs>
+    <!-- Single gradient from top-left (bright) to bottom-right (dark) -->
+    <linearGradient id="brand-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3DB9A0" />
+      <stop offset="100%" stop-color="#1A7A68" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Left circle -->
+  <circle cx="35" cy="50" r="28" 
+        fill="none" 
+        stroke="url(#brand-gradient)" 
+        stroke-width="7" 
+        stroke-linecap="round" />
+  
+  <!-- Right circle -->
+  <circle cx="65" cy="50" r="28" 
+        fill="none" 
+        stroke="url(#brand-gradient)" 
+        stroke-width="7" 
+        stroke-linecap="round" />
+</svg>

@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  name         String?
+  role         UserRole     @default(MEMBER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  sessions     Session[]
+  messages     MsgMessage[]
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Bot {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  scopes      String[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  apiKeys     BotApiKey[]
+  messages    MsgMessage[]
+}
+
+model BotApiKey {
+  id        String    @id @default(cuid())
+  botId     String
+  bot       Bot       @relation(fields: [botId], references: [id], onDelete: Cascade)
+  keyHash   String    @unique
+  label     String?
+  lastUsed  DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// ─── Messaging ───────────────────────────────────────────────────────────────
+
+model MsgThread {
+  id        String       @id @default(cuid())
+  title     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  messages  MsgMessage[]
+}
+
+model MsgMessage {
+  id         String    @id @default(cuid())
+  threadId   String
+  thread     MsgThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  content    String
+  senderType String // 'user' | 'bot' | 'agent'
+  senderId   String
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+  botId      String?
+  bot        Bot?      @relation(fields: [botId], references: [id])
+  createdAt  DateTime  @default(now())
+}
+
+// ─── Agents ──────────────────────────────────────────────────────────────────
+
+model AgentRun {
+  id         String         @id @default(cuid())
+  agentKey   String
+  trigger    String
+  status     AgentRunStatus @default(RUNNING)
+  inputData  Json?
+  outputData Json?
+  error      String?
+  startedAt  DateTime       @default(now())
+  finishedAt DateTime?
+  steps      AgentRunStep[]
+}
+
+enum AgentRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model AgentRunStep {
+  id        String   @id @default(cuid())
+  runId     String
+  run       AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  type      String // 'llm' | 'tool'
+  data      Json
+  createdAt DateTime @default(now())
+}
+
+// ─── Workflows ───────────────────────────────────────────────────────────────
+
+model WorkflowRun {
+  id          String            @id @default(cuid())
+  workflowKey String
+  status      WorkflowRunStatus @default(PENDING)
+  inputData   Json?
+  error       String?
+  startedAt   DateTime          @default(now())
+  finishedAt  DateTime?
+  steps       WorkflowRunStep[]
+}
+
+enum WorkflowRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model WorkflowRunStep {
+  id         String      @id @default(cuid())
+  runId      String
+  run        WorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  nodeId     String
+  status     String
+  inputData  Json?
+  outputData Json?
+  error      String?
+  startedAt  DateTime    @default(now())
+  finishedAt DateTime?
+}
+
+// ─── Notes ───────────────────────────────────────────────────────────────────
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  body      String   @default("")
+  slug      String?  @unique
+  tags      String[]
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Demo Objects ────────────────────────────────────────────────────────────
+
+model Customer {
+  id        String         @id @default(cuid())
+  name      String
+  email     String?        @unique
+  phone     String?
+  status    CustomerStatus @default(ACTIVE)
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  price       Float?
+  status      ProductStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum ProductStatus {
+  ACTIVE
+  ARCHIVED
+}

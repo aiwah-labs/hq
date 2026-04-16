@@ -1,0 +1,21 @@
+{
+  "name": "hq",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev:platform": "./scripts/dev-platform.sh",
+    "workshop": "pnpm --filter @hq/workshop dev",
+    "api": "pnpm --filter @hq/api dev",
+    "mcp": "pnpm --filter @hq/mcp dev",
+    "db:generate": "pnpm --filter @hq/db exec prisma generate",
+    "db:migrate": "pnpm --filter @hq/db exec prisma migrate dev",
+    "db:migrate:prod": "pnpm --filter @hq/db exec prisma migrate deploy",
+    "db:seed": "pnpm --filter @hq/db exec tsx src/seed.ts",
+    "db:studio": "pnpm --filter @hq/db exec prisma studio",
+    "db:local:bootstrap": "./scripts/local-postgres.sh bootstrap",
+    "db:local:start": "./scripts/local-postgres.sh start",
+    "db:local:stop": "./scripts/local-postgres.sh stop"
+  },
+  "license": "MIT"
+}
