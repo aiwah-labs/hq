@@ -7,11 +7,19 @@ import { ApiError, inferCodeFromStatus, inferStatusFromError } from './lib/error
 import { registerV1Routes } from './routes/v1';
 import { startSSEListener, stopSSEListener } from './lib/sse';
 import { registerAllWorkers } from './workers/index';
+import { mkdirSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Auto-register demo actions, agents, and workflows at import time
 import '@hq/actions';
 import '@hq/agents';
 import '@hq/workflows';
+
+// Resolve temp/ at repo root (apps/api → ../../temp)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(__dirname, '../../../../');
+const LOG_FILE = resolve(REPO_ROOT, 'temp/api.log');
 
 function parseCorsOrigins(): string[] {
   const raw = process.env.API_CORS_ORIGINS?.trim();
@@ -24,11 +32,24 @@ function buildLogger() {
   const isDev = process.env.NODE_ENV !== 'production';
 
   if (isDev) {
+    // Ensure temp/ exists
+    mkdirSync(resolve(REPO_ROOT, 'temp'), { recursive: true });
+
     return {
       level,
       transport: {
-        target: 'pino-pretty',
-        options: { colorize: true, ignore: 'pid,hostname', translateTime: 'HH:MM:ss' },
+        targets: [
+          // Pretty output to terminal
+          {
+            target: 'pino-pretty',
+            options: { colorize: true, ignore: 'pid,hostname', translateTime: 'HH:MM:ss' },
+          },
+          // JSON to file for analysis: tail -f temp/api.log | pino-pretty
+          {
+            target: 'pino/file',
+            options: { destination: LOG_FILE, append: true },
+          },
+        ],
       },
     };
   }

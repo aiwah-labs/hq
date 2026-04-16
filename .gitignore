@@ -11,3 +11,4 @@ coverage/
 data/
 logs/**/*.log
 !logs/**/.gitkeep
+temp/
