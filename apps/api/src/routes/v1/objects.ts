@@ -1,6 +1,18 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { objects, objectList, objectGet, objectCreate, objectUpdate, objectDelete, objectBulkUpdate, objectBulkDelete } from '@hq/objects';
+import {
+  objects,
+  objectList,
+  objectCount,
+  objectGet,
+  objectCreate,
+  objectUpdate,
+  objectDelete,
+  objectBulkUpdate,
+  objectBulkDelete,
+  getObjectSchema,
+  listObjectSchemas,
+} from '@hq/objects';
 import { createServiceContext } from '@hq/services';
 import { ApiError } from '../../lib/errors';
 import { requireAuth } from '../../lib/auth';
@@ -14,6 +26,14 @@ const listQuerySchema = z.object({
   cursor: z.string().optional(),
   sortBy: z.string().optional(),
   sortDir: z.enum(['asc', 'desc']).optional(),
+  include: z
+    .union([z.string(), z.array(z.string())])
+    .transform((v) => (Array.isArray(v) ? v : v.split(',').map((s) => s.trim()).filter(Boolean)))
+    .optional(),
+});
+
+const countQuerySchema = z.object({
+  q: z.string().optional(),
 });
 
 function getObjectDef(type: string) {
@@ -23,17 +43,30 @@ function getObjectDef(type: string) {
 }
 
 export async function registerObjectRoutes(app: FastifyInstance) {
-  // List registered object types
+  // List registered object types (serialized schemas)
   app.get('/v1/objects', async (request) => {
     await requireAuth(request, {});
-    return {
-      objects: Object.values(objects).map((def) => ({
-        type: def.model,
-        label: def.label,
-        pluralLabel: def.pluralLabel,
-        fields: def.fields,
-      })),
-    };
+    return { objects: listObjectSchemas() };
+  });
+
+  // Object schema (detailed metadata for a single object type)
+  app.get('/v1/objects/:type/schema', async (request) => {
+    await requireAuth(request, {});
+    const { type } = typeParamSchema.parse(request.params);
+    const schema = getObjectSchema(type);
+    if (!schema) throw new ApiError(404, 'NOT_FOUND', `Unknown object type: ${type}`);
+    return schema;
+  });
+
+  // Count records
+  app.get('/v1/objects/:type/count', async (request) => {
+    const { type } = typeParamSchema.parse(request.params);
+    const def = getObjectDef(type);
+    const actor = await requireAuth(request, { botScope: def.scopes.read });
+    const ctx = createServiceContext(actor);
+    const query = countQuerySchema.parse(request.query);
+    const count = await objectCount(type, query, ctx);
+    return { count };
   });
 
   // List records of a given type
@@ -60,7 +93,7 @@ export async function registerObjectRoutes(app: FastifyInstance) {
   app.post('/v1/objects/:type/bulk-delete', async (request) => {
     const { type } = typeParamSchema.parse(request.params);
     const def = getObjectDef(type);
-    const actor = await requireAuth(request, { botScope: def.scopes.delete });
+    const actor = await requireAuth(request, { botScope: def.scopes.delete ?? def.scopes.write });
     const ctx = createServiceContext(actor);
     const { ids } = z.object({ ids: z.array(z.string()) }).parse(request.body);
     return objectBulkDelete(type, ids, ctx);
@@ -97,8 +130,9 @@ export async function registerObjectRoutes(app: FastifyInstance) {
   app.delete('/v1/objects/:type/:id', async (request) => {
     const { type, id } = idParamSchema.parse(request.params);
     const def = getObjectDef(type);
-    const actor = await requireAuth(request, { botScope: def.scopes.delete });
+    const actor = await requireAuth(request, { botScope: def.scopes.delete ?? def.scopes.write });
     const ctx = createServiceContext(actor);
-    return objectDelete(type, id, ctx);
+    await objectDelete(type, id, ctx);
+    return { success: true };
   });
 }

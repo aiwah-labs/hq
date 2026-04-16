@@ -5,15 +5,13 @@ import type { ObjectDefinition } from '../types.js';
 describe('Object Registry', () => {
   const objectNames = Object.keys(objects);
 
-  it('has at least 4 object definitions', () => {
-    expect(objectNames.length).toBeGreaterThanOrEqual(4);
+  it('has at least one object definition', () => {
+    expect(objectNames.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('includes Company, Contact, Campaign, Prospect', () => {
-    expect(objectNames).toContain('Company');
-    expect(objectNames).toContain('Contact');
-    expect(objectNames).toContain('Campaign');
-    expect(objectNames).toContain('Prospect');
+  it('includes the seeded example objects', () => {
+    expect(objectNames).toContain('Customer');
+    expect(objectNames).toContain('Product');
   });
 
   for (const [name, def] of Object.entries(objects)) {

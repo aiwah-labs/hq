@@ -15,7 +15,17 @@
     "db:studio": "pnpm --filter @hq/db exec prisma studio",
     "db:local:bootstrap": "./scripts/local-postgres.sh bootstrap",
     "db:local:start": "./scripts/local-postgres.sh start",
-    "db:local:stop": "./scripts/local-postgres.sh stop"
+    "db:local:stop": "./scripts/local-postgres.sh stop",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm -r --if-present typecheck"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "zod": "^3.0.0"
   },
   "license": "MIT"
 }
