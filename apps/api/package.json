@@ -15,14 +15,20 @@
     "@hq/actions": "workspace:*",
     "@hq/agents": "workspace:*",
     "@hq/workflows": "workspace:*",
+    "@hq/jobs": "workspace:*",
+    "@hq/events": "workspace:*",
+    "@hq/services": "workspace:*",
     "fastify": "^5.0.0",
     "@fastify/cookie": "^11.0.0",
-    "@fastify/cors": "^10.0.0"
+    "@fastify/cors": "^10.0.0",
+    "@fastify/rate-limit": "^10.0.0",
+    "pino-pretty": "^13.0.0"
   },
   "devDependencies": {
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "vitest": "^3.0.0"
   },
   "license": "MIT"
 }
