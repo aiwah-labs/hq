@@ -16,10 +16,15 @@ import '@hq/actions';
 import '@hq/agents';
 import '@hq/workflows';
 
-// Resolve temp/ at repo root (apps/api → ../../temp)
+// Resolve temp/ at repo root (apps/api/src → ../../../.. = repo root)
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '../../../../');
-const LOG_FILE = resolve(REPO_ROOT, 'temp/api.log');
+const LOG_DIR = resolve(REPO_ROOT, 'temp/logs');
+
+function newLogFile(): string {
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19); // 2026-04-16T10-30-00
+  return resolve(LOG_DIR, `api-${ts}.log`);
+}
 
 function parseCorsOrigins(): string[] {
   const raw = process.env.API_CORS_ORIGINS?.trim();
@@ -32,8 +37,8 @@ function buildLogger() {
   const isDev = process.env.NODE_ENV !== 'production';
 
   if (isDev) {
-    // Ensure temp/ exists
-    mkdirSync(resolve(REPO_ROOT, 'temp'), { recursive: true });
+    mkdirSync(LOG_DIR, { recursive: true });
+    const logFile = newLogFile();
 
     return {
       level,
@@ -44,10 +49,12 @@ function buildLogger() {
             target: 'pino-pretty',
             options: { colorize: true, ignore: 'pid,hostname', translateTime: 'HH:MM:ss' },
           },
-          // JSON to file for analysis: tail -f temp/api.log | pino-pretty
+          // Structured JSON to timestamped file — new file per process start
+          // Analyse: cat temp/logs/api-*.log | jq 'select(.level >= 40)'
+          // Pretty:  tail -f temp/logs/api-<ts>.log | npx pino-pretty
           {
             target: 'pino/file',
-            options: { destination: LOG_FILE, append: true },
+            options: { destination: logFile, append: false },
           },
         ],
       },
