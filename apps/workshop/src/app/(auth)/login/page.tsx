@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { describeOidcProvider, readOidcEnv } from '@hq/auth/providers';
 import { Alert, Card, CardBody, CardHeader, Field, Input, Label, SubmitButton } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth';
 import { loginAction } from './actions';
@@ -31,6 +32,7 @@ export default async function LoginPage({ searchParams }: Props) {
   }
 
   const { error } = await searchParams;
+  const ssoProvider = describeOidcProvider(readOidcEnv());
 
   return (
     <main className="login-shell mx-auto flex min-h-screen w-full max-w-md items-center px-6">
@@ -69,6 +71,22 @@ export default async function LoginPage({ searchParams }: Props) {
               Continue
             </SubmitButton>
           </form>
+
+          {ssoProvider.enabled ? (
+            <>
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted">
+                <div className="h-px flex-1 bg-divider/60" />
+                or
+                <div className="h-px flex-1 bg-divider/60" />
+              </div>
+              <Link
+                href="/login/sso"
+                className="inline-flex h-8 w-full items-center justify-center rounded-[6px] border border-divider px-3 text-[13px] font-medium hover:bg-[var(--app-bg-muted)]"
+              >
+                {ssoProvider.label}
+              </Link>
+            </>
+          ) : null}
         </CardBody>
       </Card>
     </main>

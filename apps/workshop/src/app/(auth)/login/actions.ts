@@ -3,14 +3,13 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { UserStatus } from '@hq/db';
 import { SESSION_COOKIE_NAME, getSessionCookieOptions } from '@hq/auth/cookies';
 import { verifyPassword } from '@hq/auth/passwords';
-import { createSession, destroySession } from '@hq/auth/sessions';
+import { createSession, revokeSession } from '@hq/auth/sessions';
 import { db } from '@/lib/db';
 
 const loginSchema = z.object({
-  email: z.email(),
+  email: z.string().email(),
   password: z.string().min(1),
 });
 
@@ -35,8 +34,13 @@ export async function loginAction(formData: FormData): Promise<never> {
     where: { email },
   });
 
-  if (!user || user.deletedAt || user.status !== UserStatus.ACTIVE) {
+  if (!user || user.deletedAt || user.status !== 'ACTIVE') {
     return errorRedirect('Invalid credentials or inactive account.');
+  }
+
+  // SSO-only users have a null passwordHash and must use `/login/sso`.
+  if (!user.passwordHash) {
+    return errorRedirect('This account is managed by SSO — use "Continue with SSO".');
   }
 
   const valid = await verifyPassword(parsed.data.password, user.passwordHash);
@@ -49,14 +53,13 @@ export async function loginAction(formData: FormData): Promise<never> {
   const ipAddress = forwardedFor?.split(',')[0]?.trim() ?? null;
   const userAgent = requestHeaders.get('user-agent');
 
-  const session = await createSession({
-    userId: user.id,
-    ipAddress: ipAddress ?? undefined,
-    userAgent: userAgent ?? undefined,
+  const token = await createSession(user.id, {
+    ipAddress,
+    userAgent,
   });
 
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, session.token, getSessionCookieOptions());
+  cookieStore.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
 
   return redirect('/workshop');
 }
@@ -65,7 +68,9 @@ export async function logoutAction(): Promise<never> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
-  await destroySession(token);
+  if (token) {
+    await revokeSession(token);
+  }
   cookieStore.delete(SESSION_COOKIE_NAME);
 
   return redirect('/login');

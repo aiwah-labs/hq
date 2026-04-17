@@ -4,10 +4,28 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./sessions": "./src/sessions.ts",
+    "./passwords": "./src/passwords.ts",
+    "./cookies": "./src/cookies.ts",
+    "./policy": "./src/policy.ts",
+    "./types": "./src/types.ts",
+    "./principals": "./src/principals.ts",
+    "./superadmin": "./src/superadmin.ts",
+    "./middleware": "./src/middleware.ts",
+    "./api-keys": "./src/api-keys.ts",
+    "./providers": "./src/providers/index.ts"
   },
   "dependencies": {
-    "@hq/db": "workspace:*"
+    "@hq/db": "workspace:*",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest run"
   },
   "license": "MIT"
 }

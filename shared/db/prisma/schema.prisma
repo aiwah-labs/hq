@@ -10,14 +10,19 @@ datasource db {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  passwordHash String
+  id           String            @id @default(cuid())
+  email        String            @unique
+  /// Null when the user authenticates exclusively via an external identity provider (OIDC/SAML).
+  passwordHash String?
   name         String?
-  role         UserRole     @default(MEMBER)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  role         UserRole          @default(MEMBER)
+  status       UserStatus        @default(ACTIVE)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  /// Soft-delete timestamp. `status = INACTIVE` is used for temporary suspension; deletedAt is irreversible.
+  deletedAt    DateTime?
   sessions     Session[]
+  identities   IdentityAccount[]
   messages     MsgMessage[]
 }
 
@@ -26,13 +31,49 @@ enum UserRole {
   MEMBER
 }
 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 of the session token. Raw tokens are never stored.
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  ipAddress  String?
+  userAgent  String?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+/// External identity binding. One User may have zero or many IdentityAccounts —
+/// one per (provider, providerId) combination. `LOCAL` provider is implied by
+/// a non-null `passwordHash` on User; it does not require an IdentityAccount row.
+model IdentityAccount {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    IdentityProvider
+  /// IdP instance name (e.g. `google`, `okta`, `azure-ad`, `authentik`).
+  providerId  String
+  /// Stable external subject (OIDC `sub` claim, SAML NameID).
+  subject     String
+  email       String?
+  rawProfile  Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([provider, providerId, subject])
+  @@index([userId])
+}
+
+enum IdentityProvider {
+  LOCAL
+  OIDC
+  SAML
 }
 
 model Bot {
