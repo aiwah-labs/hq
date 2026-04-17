@@ -7,6 +7,8 @@
 - [`identity.md`](identity.md) — Canonical `User`, sessions, `IdentityAccount`, and the provider abstraction.
 - [`sso.md`](sso.md) — Turning on OIDC SSO with Google/Okta/Azure/Authentik/Keycloak/Auth0.
 - [`permissions.md`](permissions.md) — The unified policy engine: principals, permissions, ownership, and `/v1/me/permissions`.
+- [`modules.md`](modules.md) — Where the line sits between platform code and swappable example modules.
+- [`example-modules/`](example-modules/README.md) — Bundled example modules. Each file includes an "adapt" and a "remove" checklist.
 
 ## Planning
 
