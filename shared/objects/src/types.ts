@@ -77,6 +77,27 @@ export interface ObjectScopes {
   delete?: string;
 }
 
+/**
+ * Per-object permission keys used by the policy engine. When omitted, the
+ * registry derives keys as `{model}.{op}` from a lower-cased model name
+ * (e.g. `task.read`, `task.update`). Override if you want to share a
+ * permission across several objects (e.g. all CRM objects under `crm.*`).
+ */
+export interface ObjectPermissions {
+  read?: string;
+  create?: string;
+  update?: string;
+  delete?: string;
+  bulk?: string;
+}
+
+/** Ownership hints consumed by `resolveObjectAccess` / `recordBelongsToUser`. */
+export interface ObjectOwnership {
+  ownerField?: string;
+  assigneeField?: string;
+  extraFields?: string[];
+}
+
 export interface ObjectDefinition {
   model: string;
   label: string;
@@ -84,6 +105,10 @@ export interface ObjectDefinition {
   /** Optional default field used as object title in UI. If omitted, generic picks a sensible default. */
   displayField?: string;
   scopes: ObjectScopes;
+  /** Optional: override default `{model}.{op}` permission keys. */
+  permissions?: ObjectPermissions;
+  /** Optional: how to check "does this record belong to `principal.userId`?". */
+  ownership?: ObjectOwnership;
   events?: boolean;
   fields: Record<string, FieldDefinition>;
 }

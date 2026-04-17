@@ -28,5 +28,8 @@ export type {
   FieldDetailMetadata,
   FieldFormMetadata,
   ObjectScopes,
+  ObjectPermissions,
+  ObjectOwnership,
   ListParams,
 } from './types.js';
+export { resolveObjectPermissions, getObjectOwnership } from './permissions.js';

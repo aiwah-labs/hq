@@ -6,6 +6,7 @@
 - [`actions.md`](actions.md) — Authoring actions: scope-gated, Zod-validated, auto-exposed over API + MCP.
 - [`identity.md`](identity.md) — Canonical `User`, sessions, `IdentityAccount`, and the provider abstraction.
 - [`sso.md`](sso.md) — Turning on OIDC SSO with Google/Okta/Azure/Authentik/Keycloak/Auth0.
+- [`permissions.md`](permissions.md) — The unified policy engine: principals, permissions, ownership, and `/v1/me/permissions`.
 
 ## Planning
 

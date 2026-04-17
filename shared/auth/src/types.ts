@@ -24,19 +24,51 @@ export const BOT_SCOPES = [
 ] as const;
 export type BotScope = (typeof BOT_SCOPES)[number];
 
+/**
+ * Platform-level permissions. Narrow string union so misspellings fail at
+ * compile time. Object-level perms (`customer.read`, `task.update`, …) are
+ * represented as strings at runtime; the typed `PermissionKey` covers the
+ * canonical built-in set. Object/action code that wants a concrete key can
+ * cast to `PermissionKey`.
+ */
 export type PermissionKey =
+  // UI surfaces
   | 'workshop.view'
   | 'content.all'
+  | 'messaging.view'
+  // Settings
   | 'settings.view'
+  | 'settings.manage'
+  // Users / identity
   | 'users.view'
   | 'users.manage'
+  | 'identity.manage'
   | 'admin.surface'
+  // Bots
   | 'bots.view'
   | 'bots.create'
   | 'bots.manage.any'
-  | 'messaging.view';
+  // Agents
+  | 'agents.view'
+  | 'agents.manage'
+  // Workflows
+  | 'workflows.view'
+  | 'workflows.execute'
+  | 'workflows.manage'
+  // Approvals
+  | 'approvals.view'
+  | 'approvals.decide'
+  // Actions
+  | 'actions.view'
+  | 'actions.execute'
+  // Audit
+  | 'audit.view'
+  // Per-object permissions are stringly-typed at runtime; widen with `string`
+  // so codebases that generate permissions from the object registry still
+  // type-check without casts.
+  | (string & {});
 
-export type PermissionMap = Record<PermissionKey, boolean>;
+export type PermissionMap = Record<string, boolean>;
 
 export interface UserPrincipal {
   kind: 'user';

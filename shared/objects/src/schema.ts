@@ -1,5 +1,6 @@
 import { objects } from './registry.js';
-import type { FieldDefinition, ObjectDefinition } from './types.js';
+import { resolveObjectPermissions } from './permissions.js';
+import type { FieldDefinition, ObjectDefinition, ObjectOwnership, ObjectPermissions } from './types.js';
 
 export interface SerializedField {
   name: string;
@@ -36,6 +37,10 @@ export interface SerializedObject {
   displayField?: string;
   events?: boolean;
   scopes: { read: string; write: string; delete?: string };
+  /** Resolved permission keys (with `{model}.{op}` defaults applied). */
+  permissions: Required<ObjectPermissions>;
+  /** Optional ownership hints consumed by the policy engine. */
+  ownership?: ObjectOwnership;
   fields: SerializedField[];
 }
 
@@ -92,6 +97,8 @@ export function serializeObject(type: string, def: ObjectDefinition): Serialized
     displayField: def.displayField,
     events: def.events,
     scopes: def.scopes,
+    permissions: resolveObjectPermissions(def),
+    ownership: def.ownership,
     fields,
   };
 }

@@ -53,7 +53,16 @@ import { db } from '@hq/db';
 (db as any).widget = mockModel;
 
 const mockCtx = {
-  actor: { kind: 'user', userId: 'u1' },
+  actor: {
+    kind: 'user',
+    userId: 'u1',
+    email: 'u1@example.com',
+    dbRole: 'ADMIN',
+    effectiveRole: 'ADMIN',
+    isSuperadmin: false,
+    scopes: [],
+    permissions: {},
+  },
   dbClient: db,
   now: () => new Date(),
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -216,6 +225,7 @@ describe('objectCreate', () => {
 describe('objectUpdate', () => {
   it('updates a record and emits event', async () => {
     const record = { id: 'w1', name: 'Updated' };
+    mockModel.findUnique.mockResolvedValue({ id: 'w1', name: 'Old' });
     mockModel.update.mockResolvedValue(record);
 
     const result = await objectUpdate('Widget', 'w1', { name: 'Updated' }, mockCtx);
@@ -225,12 +235,19 @@ describe('objectUpdate', () => {
       objectId: 'w1',
     }));
   });
+
+  it('throws when the record does not exist', async () => {
+    mockModel.findUnique.mockResolvedValue(null);
+    await expect(objectUpdate('Widget', 'missing', { name: 'x' }, mockCtx)).rejects.toThrow('not found');
+    expect(mockModel.update).not.toHaveBeenCalled();
+  });
 });
 
 // ── objectDelete ─────────────────────────────────────────────────────────────
 
 describe('objectDelete', () => {
   it('deletes a record and emits event', async () => {
+    mockModel.findUnique.mockResolvedValue({ id: 'w1' });
     mockModel.delete.mockResolvedValue({});
 
     await objectDelete('Widget', 'w1', mockCtx);
@@ -239,6 +256,12 @@ describe('objectDelete', () => {
       objectType: 'Widget',
       objectId: 'w1',
     }));
+  });
+
+  it('throws when the record does not exist', async () => {
+    mockModel.findUnique.mockResolvedValue(null);
+    await expect(objectDelete('Widget', 'ghost', mockCtx)).rejects.toThrow('not found');
+    expect(mockModel.delete).not.toHaveBeenCalled();
   });
 });
 
@@ -296,11 +319,13 @@ describe('CRUD — error handling', () => {
   });
 
   it('propagates update errors (record not found)', async () => {
+    mockModel.findUnique.mockResolvedValue({ id: 'missing' });
     mockModel.update.mockRejectedValue(new Error('Record to update not found'));
     await expect(objectUpdate('Widget', 'missing', { name: 'X' }, mockCtx)).rejects.toThrow('Record to update not found');
   });
 
   it('propagates delete errors', async () => {
+    mockModel.findUnique.mockResolvedValue({ id: 'ghost' });
     mockModel.delete.mockRejectedValue(new Error('Record to delete does not exist'));
     await expect(objectDelete('Widget', 'ghost', mockCtx)).rejects.toThrow('does not exist');
   });
@@ -312,12 +337,14 @@ describe('CRUD — error handling', () => {
   });
 
   it('does not emit event when update fails', async () => {
+    mockModel.findUnique.mockResolvedValue({ id: 'w1' });
     mockModel.update.mockRejectedValue(new Error('DB error'));
     await expect(objectUpdate('Widget', 'w1', { name: 'X' }, mockCtx)).rejects.toThrow();
     expect(emitEvent).not.toHaveBeenCalled();
   });
 
   it('does not emit event when delete fails', async () => {
+    mockModel.findUnique.mockResolvedValue({ id: 'w1' });
     mockModel.delete.mockRejectedValue(new Error('DB error'));
     await expect(objectDelete('Widget', 'w1', mockCtx)).rejects.toThrow();
     expect(emitEvent).not.toHaveBeenCalled();

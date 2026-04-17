@@ -7,9 +7,18 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@hq/auth": "workspace:*",
     "@hq/db": "workspace:*",
     "@hq/events": "workspace:*",
     "@hq/services": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest run"
   },
   "license": "MIT"
 }

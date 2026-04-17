@@ -2,6 +2,8 @@ import { actionRegistry } from './registry.js';
 
 export { ActionRegistry, actionRegistry, registry, defineAction } from './registry.js';
 export { listParamsSchema, deriveCreateSchema, deriveUpdateSchema, serializeAction } from './schema.js';
+export { dispatchAction, executeAction } from './dispatch.js';
+export type { DispatchOptions, DispatchResult, DispatchSuccess, DispatchFailure } from './dispatch.js';
 export type {
   ActionDefinition,
   ActionContext,
