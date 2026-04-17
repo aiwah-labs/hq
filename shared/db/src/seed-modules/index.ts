@@ -10,6 +10,7 @@
  */
 import type { db as Db } from '../client.js';
 import { seedCrm } from './crm.js';
+import { seedProjectsTasks } from './projects-tasks.js';
 
 export interface SeedModule {
   name: string;
@@ -18,4 +19,5 @@ export interface SeedModule {
 
 export const seedModules: SeedModule[] = [
   { name: 'crm', seed: seedCrm },
+  { name: 'projects-tasks', seed: seedProjectsTasks },
 ];

@@ -24,6 +24,8 @@ model User {
   sessions     Session[]
   identities   IdentityAccount[]
   messages     MsgMessage[]
+  ownedProjects Project[]         @relation("ProjectOwner")
+  assignedTasks Task[]            @relation("TaskAssignee")
 }
 
 enum UserRole {
@@ -228,4 +230,68 @@ model Product {
 enum ProductStatus {
   ACTIVE
   ARCHIVED
+}
+
+// ─── Projects & Tasks (example module) ───────────────────────────────────────
+
+model Project {
+  id            String        @id @default(cuid())
+  name          String
+  summary       String?
+  status        ProjectStatus @default(PLANNED)
+  priority      TaskPriority  @default(MEDIUM)
+  ownerUserId   String?
+  owner         User?         @relation("ProjectOwner", fields: [ownerUserId], references: [id])
+  startDate     DateTime?
+  targetDate    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  tasks         Task[]
+
+  @@index([ownerUserId])
+  @@index([status])
+}
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+model Task {
+  id              String       @id @default(cuid())
+  title           String
+  description     String?
+  status          TaskStatus   @default(TODO)
+  priority        TaskPriority @default(MEDIUM)
+  projectId       String
+  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigneeUserId  String?
+  assignee        User?        @relation("TaskAssignee", fields: [assigneeUserId], references: [id])
+  dueAt           DateTime?
+  blockedReason   String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([projectId])
+  @@index([assigneeUserId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }

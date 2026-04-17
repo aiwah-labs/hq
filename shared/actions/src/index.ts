@@ -17,3 +17,4 @@ actionRegistry.registerObjectCrud();
 
 // Load custom actions (they may override / supplement CRUD defaults).
 import './custom/demo/index.js';
+import './custom/projects/index.js';

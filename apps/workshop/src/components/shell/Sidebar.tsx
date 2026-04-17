@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Database, Bot, Users, Settings, MessageSquare, Cpu, Workflow, NotebookPen } from 'lucide-react';
+import { Database, Bot, Users, Settings, MessageSquare, Cpu, Workflow, NotebookPen, LayoutGrid } from 'lucide-react';
 import type { PermissionKey, UserPrincipal } from '@hq/auth/types';
 import { PERMISSIONS } from '@/lib/access';
 import { cn } from '@/lib/cn';
@@ -29,6 +29,7 @@ export function Sidebar({ principal, mobileOpen, onClose }: Props) {
   }> = [
     { href: '/messaging', label: 'Messaging', icon: MessageSquare, requiredPermission: PERMISSIONS.messagingView },
     { href: '/objects', label: 'Objects', icon: Database, requiredPermission: PERMISSIONS.workshopView },
+    { href: '/projects', label: 'Projects', icon: LayoutGrid, requiredPermission: PERMISSIONS.workshopView },
     { href: '/agents', label: 'Agents', icon: Cpu, requiredPermission: PERMISSIONS.workshopView },
     { href: '/workflows', label: 'Workflows', icon: Workflow, requiredPermission: PERMISSIONS.workshopView },
     { href: '/notes', label: 'Notes', icon: NotebookPen, requiredPermission: PERMISSIONS.workshopView },

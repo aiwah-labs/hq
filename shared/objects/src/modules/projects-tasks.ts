@@ -1,0 +1,173 @@
+/**
+ * Example module — Projects & Tasks
+ *
+ * Ships with the template as a demonstration of ownership-aware permissions,
+ * assignment workflows, and custom actions on top of the Object Studio. Remove
+ * this file when the template is forked for a real deployment (see
+ * `docs/example-modules/projects.md` for the full removal checklist).
+ */
+import type { ObjectDefinition } from '../types.js';
+
+export const projectsTasksObjects: Record<string, ObjectDefinition> = {
+  Project: {
+    model: 'Project',
+    label: 'Project',
+    pluralLabel: 'Projects',
+    displayField: 'name',
+    scopes: { read: 'project.read', write: 'project.write', delete: 'project.delete' },
+    permissions: {
+      read: 'project.read',
+      create: 'project.create',
+      update: 'project.update',
+      delete: 'project.delete',
+      bulk: 'project.bulk',
+    },
+    ownership: { ownerField: 'ownerUserId' },
+    events: true,
+    fields: {
+      name: {
+        type: 'string',
+        label: 'Name',
+        required: true,
+        searchable: true,
+        sortable: true,
+        display: true,
+        order: 10,
+        placeholder: 'Launch revenue engine',
+      },
+      summary: {
+        type: 'text',
+        label: 'Summary',
+        format: 'textarea',
+        order: 20,
+        list: { show: false },
+      },
+      status: {
+        type: 'enum',
+        label: 'Status',
+        values: ['PLANNED', 'ACTIVE', 'BLOCKED', 'DONE', 'CANCELLED'],
+        filterable: true,
+        sortable: true,
+        order: 30,
+        defaultValue: 'PLANNED',
+      },
+      priority: {
+        type: 'enum',
+        label: 'Priority',
+        values: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'],
+        filterable: true,
+        sortable: true,
+        order: 40,
+        defaultValue: 'MEDIUM',
+      },
+      ownerUserId: {
+        type: 'relation',
+        label: 'Owner',
+        target: 'User',
+        kind: 'belongsTo',
+        foreignKey: 'ownerUserId',
+        filterable: true,
+        order: 50,
+      },
+      startDate: {
+        type: 'date',
+        label: 'Start date',
+        sortable: true,
+        order: 60,
+      },
+      targetDate: {
+        type: 'date',
+        label: 'Target date',
+        sortable: true,
+        order: 70,
+      },
+    },
+  },
+
+  Task: {
+    model: 'Task',
+    label: 'Task',
+    pluralLabel: 'Tasks',
+    displayField: 'title',
+    scopes: { read: 'task.read', write: 'task.write', delete: 'task.delete' },
+    permissions: {
+      read: 'task.read',
+      create: 'task.create',
+      update: 'task.update',
+      delete: 'task.delete',
+      bulk: 'task.bulk',
+    },
+    ownership: { assigneeField: 'assigneeUserId' },
+    events: true,
+    fields: {
+      title: {
+        type: 'string',
+        label: 'Title',
+        required: true,
+        searchable: true,
+        sortable: true,
+        display: true,
+        order: 10,
+        placeholder: 'Write draft launch email',
+      },
+      description: {
+        type: 'text',
+        label: 'Description',
+        format: 'textarea',
+        order: 20,
+        list: { show: false },
+      },
+      status: {
+        type: 'enum',
+        label: 'Status',
+        values: ['TODO', 'IN_PROGRESS', 'BLOCKED', 'DONE', 'CANCELLED'],
+        filterable: true,
+        sortable: true,
+        order: 30,
+        defaultValue: 'TODO',
+      },
+      priority: {
+        type: 'enum',
+        label: 'Priority',
+        values: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'],
+        filterable: true,
+        sortable: true,
+        order: 40,
+        defaultValue: 'MEDIUM',
+      },
+      projectId: {
+        type: 'relation',
+        label: 'Project',
+        target: 'Project',
+        kind: 'belongsTo',
+        foreignKey: 'projectId',
+        required: true,
+        filterable: true,
+        order: 50,
+      },
+      assigneeUserId: {
+        type: 'relation',
+        label: 'Assignee',
+        target: 'User',
+        kind: 'belongsTo',
+        foreignKey: 'assigneeUserId',
+        filterable: true,
+        order: 60,
+      },
+      dueAt: {
+        type: 'date',
+        label: 'Due at',
+        sortable: true,
+        filterable: true,
+        order: 70,
+      },
+      blockedReason: {
+        type: 'text',
+        label: 'Blocked reason',
+        format: 'textarea',
+        order: 80,
+        list: { show: false },
+      },
+    },
+  },
+};

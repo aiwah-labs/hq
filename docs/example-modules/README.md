@@ -5,6 +5,7 @@ Every file under `docs/example-modules/` describes one bundled example module �
 ## Bundled modules
 
 - [`crm.md`](crm.md) — Customer + Product demo. A minimal two-object CRM useful for demos and smoke-testing the Object Studio.
+- [`projects.md`](projects.md) — Project + Task example covering ownership-aware permissions, custom actions, workflows, and agents.
 
 See [`docs/modules.md`](../modules.md) for the module convention and the directory layout every module should follow.
 
