@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { db, ApiKeyEventType, BotStatus } from '@hq/db';
-import { BOT_SCOPES, type BotScope } from './types';
+import { db } from '@hq/db';
 
 const API_KEY_ROUNDS = 12;
 const DEV_DEFAULT_PEPPER = 'dev-insecure-pepper-change-in-prod';
@@ -23,141 +22,57 @@ function withPepper(rawKey: string): string {
   return `${rawKey}.${getApiKeyPepper()}`;
 }
 
-export function generateApiKey(): { key: string; prefix: string } {
+export function generateApiKey(): { key: string } {
   const prefix = crypto.randomBytes(6).toString('hex');
   const secret = crypto.randomBytes(24).toString('base64url');
   const key = `aiwah_${prefix}_${secret}`;
-  return { key, prefix };
+  return { key };
 }
 
-interface CreateApiKeyOptions {
+export async function createApiKey(options: {
   botId: string;
-  createdByUserId: string;
-  name: string;
-  scopes?: BotScope[];
-  expiresAt?: Date;
-}
-
-interface ValidateApiKeyMetadata {
-  ipAddress?: string | null;
-  userAgent?: string | null;
-}
-
-export async function createApiKey(options: CreateApiKeyOptions): Promise<{ id: string; key: string; prefix: string }> {
+  label?: string;
+}): Promise<{ id: string; key: string }> {
   const generated = generateApiKey();
   const keyHash = await bcrypt.hash(withPepper(generated.key), API_KEY_ROUNDS);
 
-  const created = await db.apiKey.create({
+  const created = await db.botApiKey.create({
     data: {
       botId: options.botId,
-      createdByUserId: options.createdByUserId,
-      name: options.name,
       keyHash,
-      keyPrefix: generated.prefix,
-      scopes: [...new Set((options.scopes ?? []).filter((scope): scope is BotScope => BOT_SCOPES.includes(scope)))],
-      expiresAt: options.expiresAt,
+      label: options.label ?? null,
     },
   });
 
-  await db.apiKeyEvent.create({
-    data: {
-      apiKeyId: created.id,
-      eventType: ApiKeyEventType.CREATED,
-      detail: 'api_key_created',
-    },
-  });
-
-  return { id: created.id, key: generated.key, prefix: generated.prefix };
+  return { id: created.id, key: generated.key };
 }
 
-export async function validateApiKey(key: string | undefined | null, metadata?: ValidateApiKeyMetadata) {
+export async function validateApiKey(key: string | undefined | null) {
   if (!key || !key.startsWith('aiwah_')) {
     return null;
   }
 
-  const [_, prefix] = key.split('_');
-  if (!prefix) {
-    return null;
-  }
-
-  const candidates = await db.apiKey.findMany({
-    where: {
-      keyPrefix: prefix,
-      revokedAt: null,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-    },
-    include: {
-      bot: true,
-      createdByUser: true,
-    },
+  const allKeys = await db.botApiKey.findMany({
+    include: { bot: true },
   });
 
-  for (const candidate of candidates) {
+  for (const candidate of allKeys) {
     const isMatch = await bcrypt.compare(withPepper(key), candidate.keyHash);
     if (!isMatch) {
       continue;
     }
 
-    if (candidate.bot.status !== BotStatus.ACTIVE || candidate.bot.archivedAt) {
-      await db.apiKeyEvent.create({
-        data: {
-          apiKeyId: candidate.id,
-          eventType: ApiKeyEventType.AUTH_FAILURE,
-          ipAddress: metadata?.ipAddress ?? undefined,
-          userAgent: metadata?.userAgent ?? undefined,
-          detail: 'bot_not_active',
-        },
-      });
-      return null;
-    }
-
-    await db.$transaction([
-      db.apiKey.update({
-        where: { id: candidate.id },
-        data: { lastUsedAt: new Date() },
-      }),
-      db.apiKeyEvent.create({
-        data: {
-          apiKeyId: candidate.id,
-          eventType: ApiKeyEventType.AUTH_SUCCESS,
-          ipAddress: metadata?.ipAddress ?? undefined,
-          userAgent: metadata?.userAgent ?? undefined,
-          detail: 'key_validated',
-        },
-      }),
-    ]);
+    await db.botApiKey.update({
+      where: { id: candidate.id },
+      data: { lastUsed: new Date() },
+    });
 
     return candidate;
-  }
-
-  if (candidates.length > 0) {
-    await db.apiKeyEvent.createMany({
-      data: candidates.map((candidate) => ({
-        apiKeyId: candidate.id,
-        eventType: ApiKeyEventType.AUTH_FAILURE,
-        ipAddress: metadata?.ipAddress ?? undefined,
-        userAgent: metadata?.userAgent ?? undefined,
-        detail: 'hash_mismatch',
-      })),
-    });
   }
 
   return null;
 }
 
 export async function revokeApiKey(id: string): Promise<void> {
-  const updated = await db.apiKey.updateMany({
-    where: { id, revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
-
-  if (updated.count > 0) {
-    await db.apiKeyEvent.create({
-      data: {
-        apiKeyId: id,
-        eventType: ApiKeyEventType.REVOKED,
-        detail: 'api_key_revoked',
-      },
-    });
-  }
+  await db.botApiKey.delete({ where: { id } });
 }

@@ -69,10 +69,7 @@ export function userPrincipalFromData(input: {
 function botPrincipalFromData(input: {
   apiKeyId: string;
   botId: string;
-  botSlug: string;
   botName: string;
-  createdByUserId: string;
-  createdByEmail: string;
   scopes: BotScope[];
 }): BotPrincipal {
   return {
@@ -80,10 +77,7 @@ function botPrincipalFromData(input: {
     source: 'apikey',
     apiKeyId: input.apiKeyId,
     botId: input.botId,
-    botSlug: input.botSlug,
     botName: input.botName,
-    createdByUserId: input.createdByUserId,
-    createdByEmail: input.createdByEmail,
     scopes: input.scopes,
     permissions: buildNoPermissions(),
   };
@@ -94,21 +88,15 @@ export async function resolveAuth(input: ResolveAuthInput): Promise<AuthContext>
 
   if (authHeader?.toLowerCase().startsWith('bearer ')) {
     const key = authHeader.slice(7).trim();
-    const apiKey = await validateApiKey(key, {
-      ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
-    });
+    const apiKey = await validateApiKey(key);
     if (apiKey) {
       return {
         kind: 'authenticated',
         principal: botPrincipalFromData({
           apiKeyId: apiKey.id,
           botId: apiKey.botId,
-          botSlug: apiKey.bot.slug,
           botName: apiKey.bot.name,
-          createdByUserId: apiKey.createdByUserId,
-          createdByEmail: apiKey.createdByUser.email,
-          scopes: apiKey.scopes.filter((scope): scope is BotScope => BOT_SCOPES.includes(scope as BotScope)),
+          scopes: apiKey.bot.scopes.filter((scope): scope is BotScope => BOT_SCOPES.includes(scope as BotScope)),
         }),
       };
     }

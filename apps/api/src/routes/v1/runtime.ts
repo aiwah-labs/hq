@@ -17,11 +17,8 @@ export async function registerRuntimeRoutes(app: FastifyInstance) {
       kind: 'bot' as const,
       source: 'apikey' as const,
       botId: 'system',
-      botSlug: 'system',
       botName: 'System',
       apiKeyId: '',
-      createdByUserId: '',
-      createdByEmail: '',
       scopes: [],
       permissions: {} as any,
     };

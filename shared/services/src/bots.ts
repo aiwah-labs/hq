@@ -1,44 +1,25 @@
 import { z } from 'zod';
-import { BotMembershipRole, BotStatus, type ApiKey, type Bot, type BotMember } from '@hq/db';
 import { createApiKey, revokeApiKey } from '@hq/auth/api-keys';
-import { assertUserPrincipal, hasScope, isBotPrincipal, isAgentPrincipal } from '@hq/auth/principals';
-import { BOT_SCOPES, type AuthPrincipal, type BotScope, type UserPrincipal } from '@hq/auth/types';
+import { assertUserPrincipal, isBotPrincipal, isAgentPrincipal } from '@hq/auth/principals';
+import { BOT_SCOPES } from '@hq/auth/types';
 import type { ServiceContext } from './context';
 
 const createBotSchema = z.object({
   name: z.string().min(2).max(80),
   description: z.string().max(280).optional(),
+  scopes: z.array(z.enum(BOT_SCOPES)).default([]),
 });
 
 const updateBotSchema = z.object({
   botId: z.string().min(1),
   name: z.string().min(2).max(80).optional(),
   description: z.string().max(280).nullable().optional(),
-  status: z.enum([BotStatus.ACTIVE, BotStatus.PAUSED, BotStatus.ARCHIVED]).optional(),
-});
-
-const addMemberSchema = z.object({
-  botId: z.string().min(1),
-  userEmail: z.email(),
-  membershipRole: z.enum([BotMembershipRole.OWNER, BotMembershipRole.MAINTAINER, BotMembershipRole.VIEWER]),
-});
-
-const updateMemberSchema = z.object({
-  botId: z.string().min(1),
-  userId: z.string().min(1),
-  membershipRole: z.enum([BotMembershipRole.OWNER, BotMembershipRole.MAINTAINER, BotMembershipRole.VIEWER]),
-});
-
-const removeMemberSchema = z.object({
-  botId: z.string().min(1),
-  userId: z.string().min(1),
+  scopes: z.array(z.enum(BOT_SCOPES)).optional(),
 });
 
 const createKeySchema = z.object({
   botId: z.string().min(1),
-  name: z.string().min(2).max(60),
-  scopes: z.array(z.enum(BOT_SCOPES)).default([]),
-  expiresAt: z.coerce.date().optional(),
+  label: z.string().min(1).max(60).optional(),
 });
 
 const revokeKeySchema = z.object({
@@ -46,60 +27,10 @@ const revokeKeySchema = z.object({
   keyId: z.string().min(1),
 });
 
-function isAdminOverride(actor: UserPrincipal): boolean {
-  return actor.isSuperadmin || actor.permissions['bots.manage.any'];
-}
-
-function normalizeSlugInput(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 50);
-}
-
-async function buildUniqueSlug(context: ServiceContext, name: string): Promise<string> {
-  const base = normalizeSlugInput(name) || 'bot';
-  let attempt = base;
-  let i = 2;
-
-  while (true) {
-    const exists = await context.dbClient.bot.findUnique({ where: { slug: attempt }, select: { id: true } });
-    if (!exists) {
-      return attempt;
-    }
-    attempt = `${base}-${i}`;
-    i += 1;
-  }
-}
-
 async function getBotOrThrow(context: ServiceContext, botId: string) {
   const bot = await context.dbClient.bot.findUnique({
     where: { id: botId },
-    include: {
-      createdByUser: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-        },
-      },
-      members: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true,
-              status: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'asc' },
-      },
-    },
+    include: { apiKeys: { orderBy: { createdAt: 'desc' } } },
   });
 
   if (!bot) {
@@ -109,172 +40,44 @@ async function getBotOrThrow(context: ServiceContext, botId: string) {
   return bot;
 }
 
-function assertBotAccessible(actor: AuthPrincipal, bot: Bot & { members: BotMember[] }): BotMembershipRole | null {
-  if (isBotPrincipal(actor)) {
-    if (actor.botId !== bot.id) {
-      throw new Error('Forbidden: bot principal cannot access another bot.');
-    }
-    return BotMembershipRole.OWNER;
-  }
+function assertBotAccess(context: ServiceContext, bot: { id: string }) {
+  const actor = context.actor;
 
   if (isAgentPrincipal(actor)) {
     throw new Error('Forbidden: agent principal cannot access bots.');
   }
 
-  if (isAdminOverride(actor)) {
-    const ownMembership = bot.members.find((member) => member.userId === actor.userId);
-    return ownMembership?.membershipRole ?? null;
+  if (isBotPrincipal(actor) && actor.botId !== bot.id) {
+    throw new Error('Forbidden: bot principal cannot access another bot.');
   }
 
-  const membership = bot.members.find((member) => member.userId === actor.userId);
-  if (!membership) {
-    throw new Error('Forbidden: bot access denied.');
+  if (!isBotPrincipal(actor)) {
+    const user = assertUserPrincipal(actor);
+    if (!user.isSuperadmin && !user.permissions['bots.manage.any'] && !user.permissions['bots.view']) {
+      throw new Error('Forbidden: missing bot access permission.');
+    }
   }
-
-  return membership.membershipRole;
-}
-
-function assertCanManageMembers(actor: UserPrincipal, role: BotMembershipRole | null): void {
-  if (isAdminOverride(actor)) {
-    return;
-  }
-
-  if (role !== BotMembershipRole.OWNER) {
-    throw new Error('Forbidden: only bot owners can manage members.');
-  }
-}
-
-function assertCanManageKeys(actor: UserPrincipal, role: BotMembershipRole | null): void {
-  if (isAdminOverride(actor)) {
-    return;
-  }
-
-  if (role !== BotMembershipRole.OWNER && role !== BotMembershipRole.MAINTAINER) {
-    throw new Error('Forbidden: only owners/maintainers can manage keys.');
-  }
-}
-
-function assertCanEditBot(actor: UserPrincipal, role: BotMembershipRole | null, inputHasStatus: boolean): void {
-  if (isAdminOverride(actor)) {
-    return;
-  }
-
-  if (role !== BotMembershipRole.OWNER && role !== BotMembershipRole.MAINTAINER) {
-    throw new Error('Forbidden: only owners/maintainers can edit bot details.');
-  }
-
-  if (inputHasStatus && role !== BotMembershipRole.OWNER) {
-    throw new Error('Forbidden: only owners can change bot status.');
-  }
-}
-
-async function countOwners(context: ServiceContext, botId: string): Promise<number> {
-  return context.dbClient.botMember.count({
-    where: {
-      botId,
-      membershipRole: BotMembershipRole.OWNER,
-    },
-  });
 }
 
 export async function listBots(context: ServiceContext) {
   const actor = context.actor;
 
   if (isAgentPrincipal(actor)) {
-    return []; // agents cannot list bots
+    return [];
   }
 
   if (isBotPrincipal(actor)) {
-    const bot = await context.dbClient.bot.findUnique({
-      where: { id: actor.botId },
-      include: {
-        createdByUser: {
-          select: { id: true, email: true, name: true },
-        },
-      },
-    });
-    if (!bot) {
-      return [];
-    }
-
-    return [
-      {
-        id: bot.id,
-        name: bot.name,
-        slug: bot.slug,
-        description: bot.description,
-        status: bot.status,
-        createdAt: bot.createdAt,
-        updatedAt: bot.updatedAt,
-        createdByUser: bot.createdByUser,
-        membershipRole: BotMembershipRole.OWNER,
-      },
-    ];
+    const bot = await context.dbClient.bot.findUnique({ where: { id: actor.botId } });
+    return bot ? [bot] : [];
   }
 
-  const adminOverride = isAdminOverride(actor);
-  const bots = await context.dbClient.bot.findMany({
-    where: adminOverride
-      ? {}
-      : {
-          members: {
-            some: {
-              userId: actor.userId,
-            },
-          },
-        },
-    include: {
-      createdByUser: {
-        select: { id: true, email: true, name: true },
-      },
-      members: {
-        where: {
-          userId: actor.userId,
-        },
-        select: {
-          membershipRole: true,
-        },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  return bots.map((bot) => ({
-    id: bot.id,
-    name: bot.name,
-    slug: bot.slug,
-    description: bot.description,
-    status: bot.status,
-    createdAt: bot.createdAt,
-    updatedAt: bot.updatedAt,
-    createdByUser: bot.createdByUser,
-    membershipRole: bot.members[0]?.membershipRole ?? null,
-  }));
+  return context.dbClient.bot.findMany({ orderBy: { createdAt: 'desc' } });
 }
 
 export async function getBot(context: ServiceContext, botId: string) {
   const bot = await getBotOrThrow(context, botId);
-  const membershipRole = assertBotAccessible(context.actor, bot);
-
-  return {
-    id: bot.id,
-    name: bot.name,
-    slug: bot.slug,
-    description: bot.description,
-    status: bot.status,
-    createdAt: bot.createdAt,
-    updatedAt: bot.updatedAt,
-    createdByUser: bot.createdByUser,
-    membershipRole,
-    members: bot.members.map((member) => ({
-      id: member.id,
-      userId: member.userId,
-      membershipRole: member.membershipRole,
-      createdAt: member.createdAt,
-      updatedAt: member.updatedAt,
-      user: member.user,
-    })),
-  };
+  assertBotAccess(context, bot);
+  return bot;
 }
 
 export async function createBot(context: ServiceContext, input: unknown) {
@@ -285,259 +88,68 @@ export async function createBot(context: ServiceContext, input: unknown) {
   }
 
   const parsed = createBotSchema.parse(input);
-  const slug = await buildUniqueSlug(context, parsed.name);
 
-  return context.dbClient.$transaction(async (tx) => {
-    const created = await tx.bot.create({
-      data: {
-        name: parsed.name.trim(),
-        slug,
-        description: parsed.description?.trim() || null,
-        status: BotStatus.ACTIVE,
-        createdByUserId: actor.userId,
-      },
-    });
-
-    await tx.botMember.create({
-      data: {
-        botId: created.id,
-        userId: actor.userId,
-        membershipRole: BotMembershipRole.OWNER,
-      },
-    });
-
-    return created;
+  return context.dbClient.bot.create({
+    data: {
+      name: parsed.name.trim(),
+      description: parsed.description?.trim() || null,
+      scopes: parsed.scopes,
+    },
   });
 }
 
 export async function updateBot(context: ServiceContext, input: unknown) {
-  const actor = assertUserPrincipal(context.actor);
+  assertUserPrincipal(context.actor);
   const parsed = updateBotSchema.parse(input);
   const bot = await getBotOrThrow(context, parsed.botId);
-  const role = assertBotAccessible(actor, bot);
-  const hasStatusUpdate = typeof parsed.status !== 'undefined';
-
-  assertCanEditBot(actor, role, hasStatusUpdate);
+  assertBotAccess(context, bot);
 
   return context.dbClient.bot.update({
     where: { id: parsed.botId },
     data: {
       name: parsed.name?.trim(),
       description: parsed.description === null ? null : parsed.description?.trim(),
-      status: parsed.status,
-      archivedAt: parsed.status === BotStatus.ARCHIVED ? new Date() : null,
+      scopes: parsed.scopes,
     },
   });
 }
 
-export async function addBotMember(context: ServiceContext, input: unknown) {
+export async function deleteBot(context: ServiceContext, botId: string) {
   const actor = assertUserPrincipal(context.actor);
-  const parsed = addMemberSchema.parse(input);
-  const bot = await getBotOrThrow(context, parsed.botId);
-  const role = assertBotAccessible(actor, bot);
 
-  assertCanManageMembers(actor, role);
-
-  const email = parsed.userEmail.toLowerCase().trim();
-  const target = await context.dbClient.user.findUnique({ where: { email } });
-  if (!target || target.deletedAt) {
-    throw new Error('Target user not found.');
+  if (!actor.isSuperadmin && !actor.permissions['bots.manage.any']) {
+    throw new Error('Forbidden: missing bots.manage.any permission.');
   }
 
-  return context.dbClient.botMember.upsert({
-    where: {
-      botId_userId: {
-        botId: parsed.botId,
-        userId: target.id,
-      },
-    },
-    create: {
-      botId: parsed.botId,
-      userId: target.id,
-      membershipRole: parsed.membershipRole,
-    },
-    update: {
-      membershipRole: parsed.membershipRole,
-    },
-  });
-}
-
-export async function updateBotMember(context: ServiceContext, input: unknown) {
-  const actor = assertUserPrincipal(context.actor);
-  const parsed = updateMemberSchema.parse(input);
-  const bot = await getBotOrThrow(context, parsed.botId);
-  const role = assertBotAccessible(actor, bot);
-
-  assertCanManageMembers(actor, role);
-
-  if (parsed.userId === bot.createdByUserId && parsed.membershipRole !== BotMembershipRole.OWNER) {
-    throw new Error('Forbidden: bot creator must remain an owner.');
-  }
-
-  const existing = await context.dbClient.botMember.findUnique({
-    where: {
-      botId_userId: {
-        botId: parsed.botId,
-        userId: parsed.userId,
-      },
-    },
-  });
-
-  if (!existing) {
-    throw new Error('Bot member not found.');
-  }
-
-  if (existing.membershipRole === BotMembershipRole.OWNER && parsed.membershipRole !== BotMembershipRole.OWNER) {
-    const ownerCount = await countOwners(context, parsed.botId);
-    if (ownerCount <= 1) {
-      throw new Error('Forbidden: bot must keep at least one owner.');
-    }
-  }
-
-  return context.dbClient.botMember.update({
-    where: {
-      botId_userId: {
-        botId: parsed.botId,
-        userId: parsed.userId,
-      },
-    },
-    data: {
-      membershipRole: parsed.membershipRole,
-    },
-  });
-}
-
-export async function removeBotMember(context: ServiceContext, input: unknown) {
-  const actor = assertUserPrincipal(context.actor);
-  const parsed = removeMemberSchema.parse(input);
-  const bot = await getBotOrThrow(context, parsed.botId);
-  const role = assertBotAccessible(actor, bot);
-
-  assertCanManageMembers(actor, role);
-
-  if (parsed.userId === bot.createdByUserId) {
-    throw new Error('Forbidden: bot creator cannot be removed.');
-  }
-
-  const existing = await context.dbClient.botMember.findUnique({
-    where: {
-      botId_userId: {
-        botId: parsed.botId,
-        userId: parsed.userId,
-      },
-    },
-  });
-  if (!existing) {
-    throw new Error('Bot member not found.');
-  }
-
-  if (existing.membershipRole === BotMembershipRole.OWNER) {
-    const ownerCount = await countOwners(context, parsed.botId);
-    if (ownerCount <= 1) {
-      throw new Error('Forbidden: bot must keep at least one owner.');
-    }
-  }
-
-  await context.dbClient.botMember.delete({
-    where: {
-      botId_userId: {
-        botId: parsed.botId,
-        userId: parsed.userId,
-      },
-    },
-  });
-}
-
-function toSafeKey(input: ApiKey) {
-  return {
-    id: input.id,
-    name: input.name,
-    keyPrefix: input.keyPrefix,
-    scopes: input.scopes,
-    lastUsedAt: input.lastUsedAt,
-    expiresAt: input.expiresAt,
-    revokedAt: input.revokedAt,
-    createdAt: input.createdAt,
-    botId: input.botId,
-    createdByUserId: input.createdByUserId,
-  };
+  await context.dbClient.bot.delete({ where: { id: botId } });
 }
 
 export async function listBotKeys(context: ServiceContext, botId: string) {
   const bot = await getBotOrThrow(context, botId);
-  const role = assertBotAccessible(context.actor, bot);
+  assertBotAccess(context, bot);
 
-  if (!isBotPrincipal(context.actor)) {
-    assertCanManageKeys(assertUserPrincipal(context.actor), role);
-  }
-
-  const keys = await context.dbClient.apiKey.findMany({
-    where: {
-      botId,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
+  return context.dbClient.botApiKey.findMany({
+    where: { botId },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, label: true, lastUsed: true, createdAt: true, botId: true },
   });
-
-  return keys.map(toSafeKey);
 }
 
 export async function createBotKey(context: ServiceContext, input: unknown) {
   const parsed = createKeySchema.parse(input);
-  const actor = context.actor;
-  let createdByUserId: string;
+  const bot = await getBotOrThrow(context, parsed.botId);
+  assertBotAccess(context, bot);
 
-  if (isBotPrincipal(actor)) {
-    if (actor.botId !== parsed.botId) {
-      throw new Error('Forbidden: bot principal cannot create keys for another bot.');
-    }
-    if (!hasScope(actor, 'content.write')) {
-      throw new Error("Forbidden: bot principal requires 'content.write' scope to create keys.");
-    }
-    createdByUserId = actor.createdByUserId;
-  } else {
-    const userActor = assertUserPrincipal(actor);
-    const bot = await getBotOrThrow(context, parsed.botId);
-    const role = assertBotAccessible(userActor, bot);
-    assertCanManageKeys(userActor, role);
-    createdByUserId = userActor.userId;
-  }
-
-  const created = await createApiKey({
-    botId: parsed.botId,
-    createdByUserId,
-    name: parsed.name.trim(),
-    scopes: parsed.scopes as BotScope[],
-    expiresAt: parsed.expiresAt,
-  });
-
-  return created;
+  return createApiKey({ botId: parsed.botId, label: parsed.label });
 }
 
 export async function revokeBotKey(context: ServiceContext, input: unknown) {
   const parsed = revokeKeySchema.parse(input);
-  const actor = context.actor;
+  const bot = await getBotOrThrow(context, parsed.botId);
+  assertBotAccess(context, bot);
 
-  if (isBotPrincipal(actor)) {
-    if (actor.botId !== parsed.botId) {
-      throw new Error('Forbidden: bot principal cannot revoke keys for another bot.');
-    }
-    if (!hasScope(actor, 'content.write')) {
-      throw new Error("Forbidden: bot principal requires 'content.write' scope to revoke keys.");
-    }
-  } else {
-    const userActor = assertUserPrincipal(actor);
-    const bot = await getBotOrThrow(context, parsed.botId);
-    const role = assertBotAccessible(userActor, bot);
-    assertCanManageKeys(userActor, role);
-  }
-
-  const key = await context.dbClient.apiKey.findFirst({
-    where: {
-      id: parsed.keyId,
-      botId: parsed.botId,
-    },
+  const key = await context.dbClient.botApiKey.findFirst({
+    where: { id: parsed.keyId, botId: parsed.botId },
   });
 
   if (!key) {

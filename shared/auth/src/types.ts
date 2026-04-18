@@ -90,10 +90,7 @@ export interface BotPrincipal {
   source: 'apikey';
   apiKeyId: string;
   botId: string;
-  botSlug: string;
   botName: string;
-  createdByUserId: string;
-  createdByEmail: string;
   scopes: BotScope[];
   permissions: PermissionMap;
 }
