@@ -404,3 +404,34 @@ model PlatformEvent {
   @@index([correlationId])
   @@index([createdAt])
 }
+
+// ─── Inbox ────────────────────────────────────────────────────────────────────
+
+/**
+ * A notification surfaced to a specific user. Created by the platform when
+ * something requires their attention: a task assignment, an approval request,
+ * a workflow failure, an agent handoff, or a message mention.
+ */
+model InboxItem {
+  id                String          @id @default(cuid())
+  recipientUserId   String
+  type              String          // 'task_assigned' | 'approval_requested' | 'workflow_failed' | 'agent_handoff' | 'mention'
+  title             String
+  body              String          @default("")
+  sourceType        String?         // 'Task' | 'ActionApprovalRequest' | 'WorkflowRun' | 'AgentThread' | 'Message'
+  sourceId          String?
+  actionUrl         String?
+  status            InboxItemStatus @default(UNREAD)
+  createdAt         DateTime        @default(now())
+  readAt            DateTime?
+
+  @@index([recipientUserId, status])
+  @@index([recipientUserId, createdAt])
+  @@index([sourceType, sourceId])
+}
+
+enum InboxItemStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}

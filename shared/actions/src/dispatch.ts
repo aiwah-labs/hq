@@ -18,7 +18,7 @@
  */
 import type { AuthPrincipal, PermissionKey } from '@hq/auth/types';
 import { can } from '@hq/auth/policy';
-import { createServiceContext, type ServiceContext } from '@hq/services';
+import { createServiceContext, createInboxItem, type ServiceContext } from '@hq/services';
 import { emitEvent } from '@hq/events';
 import { actionRegistry } from './registry.js';
 import type { ActionDefinition, ActionRisk } from './types.js';
@@ -272,6 +272,22 @@ export async function dispatchAction<T = unknown>(
       correlationId: opts?.correlationId ?? approvalReq.id,
       payload: { risk, reason: action.approval?.reason, executionId: exec.id },
     });
+    // Notify all ADMIN users that an approval is waiting for their decision.
+    void ctx.dbClient.user?.findMany({ where: { role: 'ADMIN', status: 'ACTIVE' } })?.then((admins) =>
+      Promise.allSettled(
+        admins.map((u) =>
+          createInboxItem(ctx, {
+            recipientUserId: u.id,
+            type: 'approval_requested',
+            title: `Approval required: ${action.name}`,
+            body: action.approval?.reason ?? `A ${risk} action is awaiting your decision.`,
+            sourceType: 'ActionApprovalRequest',
+            sourceId: approvalReq.id,
+            actionUrl: `/approvals/${approvalReq.id}`,
+          }),
+        ),
+      ),
+    );
     return {
       ok: true,
       pending: true,

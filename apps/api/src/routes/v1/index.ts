@@ -11,6 +11,7 @@ import { registerMessagingRoutes } from './messaging';
 import { registerAgentRoutes } from './agents';
 import { registerWorkflowRoutes } from './workflows';
 import { registerNotesRoutes } from './notes';
+import { registerInboxRoutes } from './inbox';
 
 export async function registerV1Routes(app: FastifyInstance) {
   await registerMeRoute(app);
@@ -25,4 +26,5 @@ export async function registerV1Routes(app: FastifyInstance) {
   await registerAgentRoutes(app);
   await registerWorkflowRoutes(app);
   await registerNotesRoutes(app);
+  await registerInboxRoutes(app);
 }

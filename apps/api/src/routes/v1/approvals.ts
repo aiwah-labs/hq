@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { db } from '@hq/db';
 import { can } from '@hq/auth/policy';
 import { dispatchAction } from '@hq/actions';
+import { createInboxItem, createServiceContext } from '@hq/services';
 import { ApiError } from '../../lib/errors';
 import { requireAuth } from '../../lib/auth';
 
@@ -126,6 +127,19 @@ export async function registerApprovalRoutes(app: FastifyInstance) {
         'details' in outcome ? outcome.details : undefined,
       );
     }
+    // Notify the requester (if they're a user) that their action was approved.
+    if (approval.requestedByType === 'user') {
+      void createInboxItem(createServiceContext(principal), {
+        recipientUserId: approval.requestedById,
+        type: 'approval_decided',
+        title: `Approved: ${approval.actionName}`,
+        body: `Your request for "${approval.actionName}" was approved.`,
+        sourceType: 'ActionApprovalRequest',
+        sourceId: approval.id,
+        actionUrl: `/approvals/${approval.id}`,
+      }).catch(() => {});
+    }
+
     reply.code(200);
     return {
       approvalId: approval.id,
@@ -170,6 +184,19 @@ export async function registerApprovalRoutes(app: FastifyInstance) {
           error: body?.note ?? 'Rejected by approver.',
         },
       });
+    }
+
+    // Notify the requester (if they're a user) that their action was rejected.
+    if (approval.requestedByType === 'user') {
+      void createInboxItem(createServiceContext(principal), {
+        recipientUserId: approval.requestedById,
+        type: 'approval_decided',
+        title: `Rejected: ${approval.actionName}`,
+        body: body?.note ?? `Your request for "${approval.actionName}" was rejected.`,
+        sourceType: 'ActionApprovalRequest',
+        sourceId: approval.id,
+        actionUrl: `/approvals/${approval.id}`,
+      }).catch(() => {});
     }
 
     return { approvalId: approval.id, status: 'REJECTED' };
