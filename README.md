@@ -1,13 +1,22 @@
+<p align="center">
+  <img src="./docs/assets/hq-banner.png" alt="HQ — the operating system where your team and your AI agents work together" width="100%">
+</p>
+
 # HQ
 
-**Your data. Your logic. Your internal platform.**
+> **Early preview.** Not production ready. APIs will change. [Watch releases](https://github.com/aiwah-labs/hq/releases).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Version](https://img.shields.io/github/v/release/aiwah-labs/hq)](https://github.com/aiwah-labs/hq/releases)
-[![CI](https://github.com/aiwah-labs/hq/actions/workflows/ci.yml/badge.svg)](https://github.com/aiwah-labs/hq/actions)
-[![Discussions](https://img.shields.io/github/discussions/aiwah-labs/hq)](https://github.com/aiwah-labs/hq/discussions)
+**The operating system where your team and your AI agents work together.**
 
-HQ is a production-ready template for building self-hosted operational infrastructure. Fork it, point a coding agent at it, and build your domain — not boilerplate. It ships with identity, permissions, a registry-driven object/action system, agent governance, MCP, activity timelines, diagnostics, and two removable example modules. Your data stays in your database. Your logic lives in your codebase.
+HQ is a template for self-hosted business infrastructure. Clone it, hand it to a coding agent, and shape it to what your business does. Your data stays in your database. Your logic lives in your codebase.
+
+[Quick start](#quick-start) · [The platform](#the-platform) · [Connect your agents](#connect-your-agents) · [Docs](./docs) · [Deploy](./DEPLOY.md)
+
+---
+
+## Quick start
+
+You'll need Node 22, pnpm 10, and Docker.
 
 ```bash
 git clone https://github.com/aiwah-labs/hq
@@ -17,61 +26,37 @@ pnpm db:local:bootstrap
 pnpm dev:platform
 ```
 
-Workshop runs at **http://localhost:3002** · API at **http://localhost:3003**
-
-Default login: `admin@example.com` / `password`
-
----
-
-## What HQ is
-
-A template. Not a SaaS. Not a no-code tool.
-
-You fork it, load it into a coding agent, and shape it to your business. The platform takes care of the hard infrastructure so you spend time on your domain, not on rebuilding auth, permissions, and action routing.
-
-## What HQ is not
-
-HQ is not a finished product. It is not a no-code builder. It has no plugin marketplace. You are expected to write code to add your objects, actions, and workflows.
-
----
-
-## Local setup
-
-Prerequisites: **Node.js 22+**, **pnpm 10+**, **Docker** (for Postgres)
+Open http://localhost:3002 and log in with `admin@example.com` / `password`.
 
 ```bash
-# 1. Clone
-git clone https://github.com/aiwah-labs/hq
-cd hq
-
-# 2. Install
-pnpm install
-
-# 3. Bootstrap local Postgres (starts container, migrates, seeds)
-pnpm db:local:bootstrap
-
-# 4. Start Workshop + API
-pnpm dev:platform
-
-# 5. Check your setup
-pnpm doctor
+pnpm doctor      # check your setup
+pnpm db:studio   # browse the database
+pnpm mcp         # run the MCP server
 ```
-
-Log in at http://localhost:3002 with `admin@example.com` / `password`.
 
 ---
 
-## First things to try
+## The platform
 
-**Explore the example modules:**
-- `/objects` — Object Studio: browse the CRM (Customer, Product) and Projects/Tasks modules
-- `/projects` — project overview, portfolio, and blocked-tasks view
-- `/agents` — see the registered agents and what actions they can use
-- `/approvals` — governance queue for high-risk actions
+HQ gives you the pieces you'd build anyway — objects, actions, permissions, workflows, an admin UI, and an MCP server — so you can skip the first three months and get to the work only you can do.
 
-**Connect MCP:**
+**Objects** are the things your business runs on. Contacts, deals, projects, whatever it is you track. Define the shape once and every part of the platform picks it up: the API, the admin UI, the agents.
 
-Add to your Claude Desktop config:
+**Actions** are what happens to those objects. A human clicking a button, an agent calling a tool, a workflow step — they all hit the same code path with the same permissions. You write the action once. You don't write it again for each caller.
+
+**Agents** are the AI that works inside the system. They have access to your data, your actions, and your team's context. They answer messages, react to events, run on a schedule, or show up as a step in a workflow.
+
+**Workflows** chain actions together. You define them in code. They run on a schedule, on an event, or on demand. They handle the repetitive stuff nobody should have to think about.
+
+**Workshop** is where your team works from. One place for records, workflow runs, agent activity, and things waiting for approval.
+
+**MCP** is the door from the outside. Claude Desktop, Cursor, OpenClaw — any MCP client gets typed access to your actions and data. No extra plumbing.
+
+**Permissions** decide who can do what. People have roles. Agents have scopes. High-risk actions wait for a human to say yes before they run.
+
+---
+
+## Connect your agents
 
 ```json
 {
@@ -85,73 +70,40 @@ Add to your Claude Desktop config:
 }
 ```
 
-Or run locally: `pnpm mcp`
-
-**Replace the example module:**
-
-Projects and Tasks are a working but removable example. See [`docs/example-modules/projects.md`](./docs/example-modules/projects.md) for the removal checklist and [`docs/example-modules/README.md`](./docs/example-modules/README.md) to build your own.
+Drop that into Claude Desktop, OpenClaw, Hermes, or any other MCP client. Your actions show up automatically.
 
 ---
 
-## Architecture
+## Build your domain
 
-```
-Objects ──────────────── Define your entities (registry-driven CRUD + schema)
-Actions ──────────────── Universal execution layer (auth, approval, audit, MCP)
-Workflows ────────────── Deterministic chains: actions, agents, conditions, loops
-Agents ───────────────── AI actors with tool access + approval awareness
-Events ───────────────── Activity timeline: every mutation, action, workflow, agent run
-Permissions ──────────── Unified policy engine: users, bots, agents, objects, actions
-Identity ─────────────── Local auth + SSO/OIDC extension path
-MCP ──────────────────── External agent access to all actions
-Workshop ─────────────── Admin UI: objects, projects, approvals, diagnostics
-```
+HQ ships with two example modules — a CRM and Projects/Tasks. Real working code, not stubs. Read them, copy what's useful, delete the rest.
 
-Deep-dives: [`docs/objects.md`](./docs/objects.md) · [`docs/actions.md`](./docs/actions.md) · [`docs/agents.md`](./docs/agents.md) · [`docs/permissions.md`](./docs/permissions.md) · [`docs/mcp.md`](./docs/mcp.md)
+- [Add an object](./docs/add-object.md)
+- [Add an action](./docs/add-action.md)
+- [Add a workflow](./docs/add-workflow.md)
+- [Add an agent](./docs/add-agent.md)
+- [Build a full module](./docs/example-modules/README.md)
 
 ---
 
-## Adding your own domain
-
-See the builder guides:
-
-- [`docs/add-object.md`](./docs/add-object.md) — add a new object type
-- [`docs/add-action.md`](./docs/add-action.md) — add a custom action
-- [`docs/add-workflow.md`](./docs/add-workflow.md) — add a workflow
-- [`docs/add-agent.md`](./docs/add-agent.md) — add an agent
-- [`docs/example-modules/README.md`](./docs/example-modules/README.md) — build a full module
-
----
-
-## Production deployment
-
-See [DEPLOY.md](./DEPLOY.md) for the full guide.
+## Deploy
 
 ```bash
-# On a fresh Ubuntu VPS
 curl -fsSL https://raw.githubusercontent.com/aiwah-labs/hq/main/scripts/setup-server.sh | bash
 git clone https://github.com/aiwah-labs/hq /opt/hq
 cd /opt/hq && cp .env.example .env.prod
-# edit .env.prod — set DATABASE_URL, SESSION_SECRET, INTERNAL_API_SECRET
-bash scripts/first-deploy.sh
-bash scripts/setup-nginx.sh your-domain.com
+# Fill in DATABASE_URL, SESSION_SECRET, INTERNAL_API_SECRET
+bash scripts/first-deploy.sh && bash scripts/setup-nginx.sh your-domain.com
 ```
 
----
+Full guide in [DEPLOY.md](./DEPLOY.md).
 
 ---
 
 ## Contributing
 
-Issues and pull requests welcome. Start with
-[CONTRIBUTING.md](./CONTRIBUTING.md) for the setup, branch, commit, and
-test conventions. Security issues: [SECURITY.md](./SECURITY.md).
-
-## Changelog
-
-Notable changes are tracked in [CHANGELOG.md](./CHANGELOG.md). Full
-per-release notes live in [`docs/releases/`](./docs/releases/).
+Issues and PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md). Security issues in [SECURITY.md](./SECURITY.md).
 
 ---
 
-MIT License · Built by [Aiwah Labs](https://aiwahlabs.com)
+MIT · Built by [Aiwah Labs](https://aiwahlabs.com) · Questions? [abil@aiwahlabs.com](mailto:abil@aiwahlabs.com)
