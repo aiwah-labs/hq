@@ -26,6 +26,7 @@ model User {
   messages     MsgMessage[]
   ownedProjects Project[]         @relation("ProjectOwner")
   assignedTasks Task[]            @relation("TaskAssignee")
+  integrationConnections IntegrationConnection[] @relation("IntegrationConnectionUser")
 }
 
 enum UserRole {
@@ -434,4 +435,84 @@ enum InboxItemStatus {
   UNREAD
   READ
   ARCHIVED
+}
+
+// ─── Integrations ────────────────────────────────────────────────────────────
+
+/**
+ * A connected instance of an integration (see @hq/integrations).
+ *
+ * The shape (scope, auth method) is determined by the `IntegrationDefinition`
+ * registered in code under the same `integrationKey`. Connections hold the
+ * concrete credentials and metadata for ONE account of that integration.
+ *
+ *   scope=ORG   → shared across the team; `userId` is null;
+ *                 access is role-gated, with optional per-connection ACL
+ *                 via `allowedUserIds` / `allowedRoles`.
+ *   scope=USER  → bound to one user; `userId` is set;
+ *                 only that user (or a delegated agent) may use it.
+ *
+ * `credentials` is a serialized AES-256-GCM envelope produced by
+ * `@hq/integrations/encrypt`. Never query or log this field directly.
+ */
+model IntegrationConnection {
+  id               String                  @id @default(cuid())
+  integrationKey   String
+  label            String
+  scope            IntegrationScope
+  userId           String?
+  user             User?                   @relation("IntegrationConnectionUser", fields: [userId], references: [id])
+
+  /// AES-256-GCM envelope JSON. Decrypt with `decryptCredentials()`.
+  credentials      String
+  /// Non-secret metadata (workspace name, account id, shop domain, etc.).
+  metadata         Json?
+
+  status           IntegrationConnStatus   @default(ACTIVE)
+  lastUsedAt       DateTime?
+  lastError        String?
+
+  /// Optional per-connection ACL. Empty arrays fall back to role-gated access.
+  allowedUserIds   String[]                @default([])
+  allowedRoles     String[]                @default([])
+
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  createdByUserId  String
+
+  @@index([integrationKey, scope])
+  @@index([userId])
+  @@unique([integrationKey, userId, label])
+}
+
+enum IntegrationScope {
+  ORG
+  USER
+}
+
+enum IntegrationConnStatus {
+  ACTIVE
+  EXPIRED
+  ERROR
+  REVOKED
+}
+
+/**
+ * Short-lived OAuth state rows. Created when a user starts an OAuth flow and
+ * deleted once the callback completes. The `state` column is the opaque
+ * token embedded in the authorize URL; a mismatch is treated as a forgery
+ * attempt. Rows expire after 15 minutes regardless of use.
+ */
+model OAuthState {
+  state           String   @id
+  integrationKey  String
+  userId          String
+  codeVerifier    String
+  redirectUri     String
+  label           String
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([userId])
 }

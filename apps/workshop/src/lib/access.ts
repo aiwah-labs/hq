@@ -50,6 +50,10 @@ export const PERMISSIONS = {
 
   // Audit
   auditView: 'audit.view',
+
+  // Integrations
+  integrationsView: 'integrations.view',
+  integrationsManage: 'integrations.manage',
 } as const satisfies Record<string, PermissionKey>;
 
 export const ROUTE_PERMISSIONS = {
@@ -66,6 +70,7 @@ export const ROUTE_PERMISSIONS = {
   audit: PERMISSIONS.auditView,
   notes: PERMISSIONS.workshopView,
   inbox: PERMISSIONS.workshopView,
+  integrations: PERMISSIONS.integrationsView,
   jobs: PERMISSIONS.adminSurface,
   diagnostics: PERMISSIONS.adminSurface,
 } as const;

@@ -63,6 +63,9 @@ export type PermissionKey =
   | 'actions.execute'
   // Audit
   | 'audit.view'
+  // Integrations
+  | 'integrations.view'
+  | 'integrations.manage'
   // Per-object permissions are stringly-typed at runtime; widen with `string`
   // so codebases that generate permissions from the object registry still
   // type-check without casts.

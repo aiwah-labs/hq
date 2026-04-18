@@ -47,6 +47,8 @@ const ADMIN_PERMS: PermissionKey[] = [
   'actions.execute',
   'audit.view',
   'messaging.view',
+  'integrations.view',
+  'integrations.manage',
 ];
 
 const MEMBER_PERMS: PermissionKey[] = [
@@ -62,6 +64,7 @@ const MEMBER_PERMS: PermissionKey[] = [
   'actions.view',
   'actions.execute',
   'messaging.view',
+  'integrations.view',
 ];
 
 export function buildPermissionMap(role: EffectiveRole): PermissionMap {
@@ -76,6 +79,7 @@ export function buildPermissionMap(role: EffectiveRole): PermissionMap {
     'approvals.view', 'approvals.decide',
     'actions.view', 'actions.execute',
     'audit.view', 'messaging.view',
+    'integrations.view', 'integrations.manage',
   ];
   const map = {} as PermissionMap;
   for (const p of all) map[p] = set.has(p);

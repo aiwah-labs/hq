@@ -30,6 +30,18 @@ export interface ActionApproval {
   bypassScopes?: string[];
 }
 
+/**
+ * Declarative requirements the action needs satisfied before it can run.
+ * Purely informational today — the dispatcher does NOT auto-resolve these.
+ * Handlers still call `resolveConnection(ctx, key)` themselves. These fields
+ * power Workshop UI hints ("this action needs the Shopify integration
+ * connected") and diagnostics.
+ */
+export interface ActionRequirements {
+  /** Integration key this action expects to be connected (e.g. `shopify`). */
+  integration?: string;
+}
+
 export interface ActionDefinition<TParams = unknown, TResult = unknown> {
   name: string;
   /** Short, human-readable title. Defaults to `name` when omitted. */
@@ -41,6 +53,8 @@ export interface ActionDefinition<TParams = unknown, TResult = unknown> {
   objects?: ActionObjects;
   /** Free-form resource identifiers (for things that aren't object types). */
   resources?: string[];
+  /** Declarative requirements (integrations, etc). Informational only. */
+  requires?: ActionRequirements;
   scopes: string[];
   /**
    * Risk level. When omitted, the dispatcher infers from action shape:
