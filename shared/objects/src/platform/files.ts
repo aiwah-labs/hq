@@ -1,0 +1,211 @@
+/**
+ * Platform objects — Folder and FileObject.
+ *
+ * These are registered so the generic object routes (`/v1/objects/Folder`,
+ * `/v1/objects/FileObject`) and workshop object views work for free. The
+ * bespoke file-specific flows (upload/complete/download, folder rename/move,
+ * search) live in `@hq/files` and are exposed under `/v1/files` +
+ * `/v1/folders/*` — the generic surface is mostly useful for listing,
+ * filtering, and bulk metadata edits.
+ */
+import type { ObjectDefinition } from '../types.js';
+
+const FOLDER_KINDS = ['USER', 'SYSTEM', 'TEMP'] as const;
+const FILE_UPLOAD_STATUSES = ['PENDING', 'COMPLETE', 'FAILED'] as const;
+const FILE_INDEX_STATUSES = ['PENDING', 'EXTRACTING', 'INDEXED', 'SKIPPED', 'FAILED'] as const;
+
+export const filesPlatformObjects: Record<string, ObjectDefinition> = {
+  Folder: {
+    model: 'Folder',
+    label: 'Folder',
+    pluralLabel: 'Folders',
+    displayField: 'name',
+    scopes: { read: 'folder.read', write: 'folder.write', delete: 'folder.delete' },
+    events: true,
+    fields: {
+      name: {
+        type: 'string',
+        label: 'Name',
+        required: true,
+        searchable: true,
+        sortable: true,
+        display: true,
+        order: 10,
+      },
+      path: {
+        type: 'string',
+        label: 'Path',
+        readonly: true,
+        searchable: true,
+        sortable: true,
+        order: 20,
+      },
+      kind: {
+        type: 'enum',
+        label: 'Kind',
+        values: [...FOLDER_KINDS],
+        filterable: true,
+        sortable: true,
+        order: 30,
+        defaultValue: 'USER',
+      },
+      parentId: {
+        type: 'relation',
+        label: 'Parent',
+        target: 'Folder',
+        kind: 'belongsTo',
+        foreignKey: 'parentId',
+        filterable: true,
+        order: 40,
+      },
+      retentionDays: {
+        type: 'number',
+        label: 'Retention (days)',
+        helpText: 'For TEMP folders, files older than this are swept by `files.sweep-temp`.',
+        order: 50,
+      },
+      indexConfig: {
+        type: 'json',
+        label: 'Index config',
+        helpText: 'Per-folder hints for enrichment and indexing pipelines.',
+        order: 60,
+        list: { show: false },
+      },
+      createdByUserId: {
+        type: 'relation',
+        label: 'Created by',
+        target: 'User',
+        kind: 'belongsTo',
+        foreignKey: 'createdByUserId',
+        readonly: true,
+        order: 70,
+      },
+    },
+  },
+
+  FileObject: {
+    model: 'FileObject',
+    label: 'File',
+    pluralLabel: 'Files',
+    displayField: 'name',
+    scopes: { read: 'file.read', write: 'file.write', delete: 'file.delete' },
+    events: true,
+    fields: {
+      name: {
+        type: 'string',
+        label: 'Name',
+        required: true,
+        searchable: true,
+        sortable: true,
+        display: true,
+        order: 10,
+      },
+      folderId: {
+        type: 'relation',
+        label: 'Folder',
+        target: 'Folder',
+        kind: 'belongsTo',
+        foreignKey: 'folderId',
+        filterable: true,
+        required: true,
+        order: 20,
+      },
+      mime: {
+        type: 'string',
+        label: 'MIME',
+        filterable: true,
+        sortable: true,
+        order: 30,
+      },
+      size: {
+        type: 'number',
+        label: 'Size',
+        readonly: true,
+        sortable: true,
+        order: 40,
+      },
+      uploadStatus: {
+        type: 'enum',
+        label: 'Upload status',
+        values: [...FILE_UPLOAD_STATUSES],
+        filterable: true,
+        sortable: true,
+        readonly: true,
+        order: 50,
+        defaultValue: 'PENDING',
+      },
+      indexStatus: {
+        type: 'enum',
+        label: 'Index status',
+        values: [...FILE_INDEX_STATUSES],
+        filterable: true,
+        sortable: true,
+        readonly: true,
+        order: 60,
+        defaultValue: 'PENDING',
+      },
+      description: {
+        type: 'text',
+        label: 'Description',
+        format: 'textarea',
+        searchable: true,
+        order: 70,
+        list: { show: false },
+      },
+      extractedText: {
+        type: 'text',
+        label: 'Extracted text',
+        format: 'textarea',
+        searchable: true,
+        readonly: true,
+        order: 80,
+        list: { show: false },
+        form: { show: false },
+      },
+      tags: {
+        type: 'json',
+        label: 'Tags',
+        helpText: 'String array of tags, used by file search.',
+        order: 90,
+      },
+      metadata: {
+        type: 'json',
+        label: 'Metadata',
+        order: 100,
+        list: { show: false },
+      },
+      storageKey: {
+        type: 'string',
+        label: 'Storage key',
+        readonly: true,
+        order: 110,
+        list: { show: false },
+        form: { show: false },
+      },
+      checksum: {
+        type: 'string',
+        label: 'Checksum',
+        readonly: true,
+        order: 120,
+        list: { show: false },
+        form: { show: false },
+      },
+      uploadedAt: {
+        type: 'date',
+        label: 'Uploaded at',
+        readonly: true,
+        sortable: true,
+        order: 130,
+      },
+      createdByUserId: {
+        type: 'relation',
+        label: 'Uploaded by',
+        target: 'User',
+        kind: 'belongsTo',
+        foreignKey: 'createdByUserId',
+        readonly: true,
+        order: 140,
+      },
+    },
+  },
+};

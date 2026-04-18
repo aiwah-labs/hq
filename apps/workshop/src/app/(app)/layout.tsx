@@ -15,10 +15,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         >
           {[
             { href: '/dashboard', label: 'Dashboard' },
-            { href: '/customers', label: 'Customers' },
-            { href: '/products', label: 'Products' },
+            { href: '/objects', label: 'Objects' },
             { href: '/messaging', label: 'Messaging' },
             { href: '/notes', label: 'Notes' },
+            { href: '/files', label: 'Files' },
             { href: '/agents', label: 'Agents' },
             { href: '/workflows', label: 'Workflows' },
           ].map((item) => (

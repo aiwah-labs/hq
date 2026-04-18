@@ -1,0 +1,25 @@
+{
+  "name": "@hq/files",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@hq/auth": "workspace:*",
+    "@hq/db": "workspace:*",
+    "@hq/events": "workspace:*",
+    "@hq/services": "workspace:*",
+    "@hq/storage": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "license": "MIT"
+}

@@ -5,6 +5,7 @@ import { getSessionApiClient } from '@/lib/api-client';
 import Link from 'next/link';
 import { ArrowLeft, Play, Power, PowerOff, Clock, Zap, MessageSquare, Calendar, Bot } from 'lucide-react';
 import { enableAgentAction, disableAgentAction, triggerAgentAction } from './actions';
+import { actionRegistry, serializeAction } from '@hq/actions';
 
 function formatDate(d: string | Date | null): string {
   if (!d) return '—';
@@ -100,20 +101,57 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ ke
       </div>
 
       {/* Capabilities */}
-      {agent.resolvedActions?.length > 0 && (
-        <Card data-testid="card-capabilities">
-          <CardHeader>Capabilities ({agent.resolvedActions.length} actions)</CardHeader>
-          <CardBody>
-            <div className="flex flex-wrap gap-1.5">
-              {agent.resolvedActions.map((a: string) => (
-                <span key={a} className="rounded-full border border-[var(--app-border)] bg-[var(--app-bg-elevated)] px-2.5 py-0.5 font-mono text-[11px]">
-                  {a}
-                </span>
-              ))}
-            </div>
-          </CardBody>
-        </Card>
-      )}
+      {agent.resolvedActions?.length > 0 && (() => {
+        const rows = (agent.resolvedActions as string[]).map((name) => {
+          const action = actionRegistry.get(name);
+          return action ? serializeAction(action) : null;
+        }).filter(Boolean) as ReturnType<typeof serializeAction>[];
+        const reads = Array.from(new Set(rows.flatMap((r) => r.objects?.reads ?? [])));
+        const writes = Array.from(new Set(rows.flatMap((r) => r.objects?.writes ?? [])));
+        const deletes = Array.from(new Set(rows.flatMap((r) => r.objects?.deletes ?? [])));
+        const riskCounts = { low: 0, medium: 0, high: 0 };
+        rows.forEach((r) => { riskCounts[r.risk]++; });
+        const gated = rows.filter((r) => r.approval?.required);
+        return (
+          <Card data-testid="card-capabilities">
+            <CardHeader>Capabilities ({rows.length} actions)</CardHeader>
+            <CardBody>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Reads</p>
+                  <p className="mt-1 text-[13px]">{reads.join(', ') || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Writes</p>
+                  <p className="mt-1 text-[13px]">{writes.join(', ') || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Deletes</p>
+                  <p className="mt-1 text-[13px]">{deletes.join(', ') || '—'}</p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 text-[12px]">
+                <Badge tone="neutral">low: {riskCounts.low}</Badge>
+                <Badge tone="teal">medium: {riskCounts.medium}</Badge>
+                <Badge tone="success">high: {riskCounts.high}</Badge>
+                {gated.length > 0 && <Badge tone="neutral">approval required: {gated.length}</Badge>}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {rows.map((r) => (
+                  <span
+                    key={r.name}
+                    title={`${r.risk}${r.approval?.required ? ' · approval required' : ''}`}
+                    className="rounded-full border border-[var(--app-border)] bg-[var(--app-bg-elevated)] px-2.5 py-0.5 font-mono text-[11px]"
+                  >
+                    {r.name}
+                    {r.approval?.required ? ' ·⚑' : ''}
+                  </span>
+                ))}
+              </div>
+            </CardBody>
+          </Card>
+        );
+      })()}
 
       {/* Threads */}
       <Card data-testid="card-threads">

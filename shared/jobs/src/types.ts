@@ -59,6 +59,14 @@ export type JobMap = {
     runId: string;
     resumeFromNodeId: string;
   };
+  'object.import': {
+    userId: string;
+    objectType: string;
+    format: 'csv' | 'json';
+    content: string;
+    fieldMap?: Record<string, string>;
+  };
+  'files.sweep-temp': Record<string, never>;
 };
 
 export type JobName = keyof JobMap;

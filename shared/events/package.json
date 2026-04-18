@@ -6,8 +6,17 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
-    "@hq/db": "workspace:*"
+    "@hq/auth": "workspace:*",
+    "@hq/db": "workspace:*",
+    "@hq/services": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
   },
   "license": "MIT"
 }

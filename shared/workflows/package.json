@@ -6,9 +6,18 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "@hq/db": "workspace:*",
-    "@hq/actions": "workspace:*"
+    "@hq/actions": "workspace:*",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0",
+    "@types/node": "^24.0.0"
   },
   "license": "MIT"
 }

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/aiwah-labs/hq/security/policy
+    about: Please report security issues privately — see SECURITY.md.
+  - name: Question / discussion
+    url: https://github.com/aiwah-labs/hq/discussions
+    about: Open-ended questions belong in Discussions, not Issues.
+  - name: Docs
+    url: https://github.com/aiwah-labs/hq/tree/main/docs
+    about: Start at docs/README.md for the full reference.

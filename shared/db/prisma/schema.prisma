@@ -10,15 +10,23 @@ datasource db {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  passwordHash String
+  id           String            @id @default(cuid())
+  email        String            @unique
+  /// Null when the user authenticates exclusively via an external identity provider (OIDC/SAML).
+  passwordHash String?
   name         String?
-  role         UserRole     @default(MEMBER)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  role         UserRole          @default(MEMBER)
+  status       UserStatus        @default(ACTIVE)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  /// Soft-delete timestamp. `status = INACTIVE` is used for temporary suspension; deletedAt is irreversible.
+  deletedAt    DateTime?
   sessions     Session[]
+  identities   IdentityAccount[]
   messages     MsgMessage[]
+  ownedProjects Project[]         @relation("ProjectOwner")
+  assignedTasks Task[]            @relation("TaskAssignee")
+  integrationConnections IntegrationConnection[] @relation("IntegrationConnectionUser")
 }
 
 enum UserRole {
@@ -26,13 +34,49 @@ enum UserRole {
   MEMBER
 }
 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 of the session token. Raw tokens are never stored.
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  ipAddress  String?
+  userAgent  String?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+/// External identity binding. One User may have zero or many IdentityAccounts —
+/// one per (provider, providerId) combination. `LOCAL` provider is implied by
+/// a non-null `passwordHash` on User; it does not require an IdentityAccount row.
+model IdentityAccount {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    IdentityProvider
+  /// IdP instance name (e.g. `google`, `okta`, `azure-ad`, `authentik`).
+  providerId  String
+  /// Stable external subject (OIDC `sub` claim, SAML NameID).
+  subject     String
+  email       String?
+  rawProfile  Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([provider, providerId, subject])
+  @@index([userId])
+}
+
+enum IdentityProvider {
+  LOCAL
+  OIDC
+  SAML
 }
 
 model Bot {
@@ -187,4 +231,396 @@ model Product {
 enum ProductStatus {
   ACTIVE
   ARCHIVED
+}
+
+// ─── Projects & Tasks (example module) ───────────────────────────────────────
+
+model Project {
+  id            String        @id @default(cuid())
+  name          String
+  summary       String?
+  status        ProjectStatus @default(PLANNED)
+  priority      TaskPriority  @default(MEDIUM)
+  ownerUserId   String?
+  owner         User?         @relation("ProjectOwner", fields: [ownerUserId], references: [id])
+  startDate     DateTime?
+  targetDate    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  tasks         Task[]
+
+  @@index([ownerUserId])
+  @@index([status])
+}
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+model Task {
+  id              String       @id @default(cuid())
+  title           String
+  description     String?
+  status          TaskStatus   @default(TODO)
+  priority        TaskPriority @default(MEDIUM)
+  projectId       String
+  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigneeUserId  String?
+  assignee        User?        @relation("TaskAssignee", fields: [assigneeUserId], references: [id])
+  dueAt           DateTime?
+  blockedReason   String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([projectId])
+  @@index([assigneeUserId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ─── Action governance ───────────────────────────────────────────────────────
+
+/**
+ * Audit record for every action executed through the central dispatcher.
+ * `status = PENDING_APPROVAL` rows are placeholders for the approval flow and
+ * get promoted to RUNNING/COMPLETED once the request is approved and the
+ * handler runs.
+ */
+model ActionExecution {
+  id                  String                  @id @default(cuid())
+  actionName          String
+  actorType           String // 'user' | 'bot' | 'agent' | 'workflow'
+  actorId             String
+  status              ActionExecutionStatus   @default(RUNNING)
+  risk                ActionRiskLevel         @default(LOW)
+  input               Json?
+  output              Json?
+  error               String?
+  approvalRequestId   String?                 @unique
+  approvalRequest     ActionApprovalRequest?  @relation("ApprovalExecution", fields: [approvalRequestId], references: [id], onDelete: SetNull)
+  correlationId       String?
+  startedAt           DateTime                @default(now())
+  completedAt         DateTime?
+  durationMs          Int?
+
+  @@index([actionName])
+  @@index([actorType, actorId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+enum ActionExecutionStatus {
+  PENDING_APPROVAL
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ActionRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model ActionApprovalRequest {
+  id                String                  @id @default(cuid())
+  actionName        String
+  requestedByType   String
+  requestedById     String
+  status            ApprovalRequestStatus   @default(PENDING)
+  risk              ActionRiskLevel         @default(MEDIUM)
+  reason            String?
+  input             Json
+  decidedByUserId   String?
+  decidedAt         DateTime?
+  expiresAt         DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  execution         ActionExecution?        @relation("ApprovalExecution")
+
+  @@index([status])
+  @@index([actionName])
+  @@index([createdAt])
+}
+
+enum ApprovalRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+// ─── Platform Events ─────────────────────────────────────────────────────────
+
+/**
+ * Inspectable audit event. Emitted by the object runtime, action dispatcher,
+ * workflow engine, agent runner, and approval flow. Powers the activity
+ * timeline in Workshop and the `GET /v1/activity` endpoints.
+ *
+ * `correlationId` groups related events (e.g. all events from a single
+ * workflow run or approval decision).
+ */
+model PlatformEvent {
+  id                  String    @id @default(cuid())
+  type                String
+  actorType           String
+  actorId             String
+  objectType          String?
+  objectId            String?
+  actionName          String?
+  workflowRunId       String?
+  agentRunId          String?
+  approvalRequestId   String?
+  correlationId       String?
+  payload             Json      @default("{}")
+  createdAt           DateTime  @default(now())
+
+  @@index([type])
+  @@index([objectType, objectId])
+  @@index([actorType, actorId])
+  @@index([actionName])
+  @@index([workflowRunId])
+  @@index([agentRunId])
+  @@index([correlationId])
+  @@index([createdAt])
+}
+
+// ─── Inbox ────────────────────────────────────────────────────────────────────
+
+/**
+ * A notification surfaced to a specific user. Created by the platform when
+ * something requires their attention: a task assignment, an approval request,
+ * a workflow failure, an agent handoff, or a message mention.
+ */
+model InboxItem {
+  id                String          @id @default(cuid())
+  recipientUserId   String
+  type              String          // 'task_assigned' | 'approval_requested' | 'workflow_failed' | 'agent_handoff' | 'mention'
+  title             String
+  body              String          @default("")
+  sourceType        String?         // 'Task' | 'ActionApprovalRequest' | 'WorkflowRun' | 'AgentThread' | 'Message'
+  sourceId          String?
+  actionUrl         String?
+  status            InboxItemStatus @default(UNREAD)
+  createdAt         DateTime        @default(now())
+  readAt            DateTime?
+
+  @@index([recipientUserId, status])
+  @@index([recipientUserId, createdAt])
+  @@index([sourceType, sourceId])
+}
+
+enum InboxItemStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+// ─── Integrations ────────────────────────────────────────────────────────────
+
+/**
+ * A connected instance of an integration (see @hq/integrations).
+ *
+ * The shape (scope, auth method) is determined by the `IntegrationDefinition`
+ * registered in code under the same `integrationKey`. Connections hold the
+ * concrete credentials and metadata for ONE account of that integration.
+ *
+ *   scope=ORG   → shared across the team; `userId` is null;
+ *                 access is role-gated, with optional per-connection ACL
+ *                 via `allowedUserIds` / `allowedRoles`.
+ *   scope=USER  → bound to one user; `userId` is set;
+ *                 only that user (or a delegated agent) may use it.
+ *
+ * `credentials` is a serialized AES-256-GCM envelope produced by
+ * `@hq/integrations/encrypt`. Never query or log this field directly.
+ */
+model IntegrationConnection {
+  id               String                  @id @default(cuid())
+  integrationKey   String
+  label            String
+  scope            IntegrationScope
+  userId           String?
+  user             User?                   @relation("IntegrationConnectionUser", fields: [userId], references: [id])
+
+  /// AES-256-GCM envelope JSON. Decrypt with `decryptCredentials()`.
+  credentials      String
+  /// Non-secret metadata (workspace name, account id, shop domain, etc.).
+  metadata         Json?
+
+  status           IntegrationConnStatus   @default(ACTIVE)
+  lastUsedAt       DateTime?
+  lastError        String?
+
+  /// Optional per-connection ACL. Empty arrays fall back to role-gated access.
+  allowedUserIds   String[]                @default([])
+  allowedRoles     String[]                @default([])
+
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  createdByUserId  String
+
+  @@index([integrationKey, scope])
+  @@index([userId])
+  @@unique([integrationKey, userId, label])
+}
+
+enum IntegrationScope {
+  ORG
+  USER
+}
+
+enum IntegrationConnStatus {
+  ACTIVE
+  EXPIRED
+  ERROR
+  REVOKED
+}
+
+/**
+ * Short-lived OAuth state rows. Created when a user starts an OAuth flow and
+ * deleted once the callback completes. The `state` column is the opaque
+ * token embedded in the authorize URL; a mismatch is treated as a forgery
+ * attempt. Rows expire after 15 minutes regardless of use.
+ */
+model OAuthState {
+  state           String   @id
+  integrationKey  String
+  userId          String
+  codeVerifier    String
+  redirectUri     String
+  label           String
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+// ─── Files ───────────────────────────────────────────────────────────────────
+
+/**
+ * Folder tree. Files live in exactly one folder; folders form a self-referential
+ * hierarchy. `path` is the denormalized absolute path ("/Contracts/2026"),
+ * recomputed when a folder is renamed or moved. Used for prefix-scoped search
+ * and cheap breadcrumbs.
+ *
+ * Storage bytes are keyed flat ("files/{fileId}") regardless of folder tree —
+ * moving or renaming a folder is a DB operation only, no S3 copy.
+ *
+ *   kind=USER    normal user-organized folders
+ *   kind=SYSTEM  platform-owned (/System/Imports, /System/Exports). Not deletable via API.
+ *   kind=TEMP    swept by `files.sweep-temp` when files exceed `retentionDays`.
+ */
+model Folder {
+  id              String       @id @default(cuid())
+  parentId        String?
+  parent          Folder?      @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children        Folder[]     @relation("FolderTree")
+  name            String
+  /// Materialized absolute path ("/Contracts/2026"). Kept in sync with parent tree.
+  path            String       @unique
+  kind            FolderKind   @default(USER)
+  /// When set on TEMP folders, the sweep job deletes files older than this.
+  retentionDays   Int?
+  /// Free-form hint consumed by external indexers (RAG, thumbnails, OCR).
+  /// e.g. `{ "extractText": true, "embed": true, "model": "text-embedding-3-small" }`
+  indexConfig     Json?
+  createdByUserId String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  files           FileObject[]
+
+  @@unique([parentId, name])
+  @@index([parentId])
+  @@index([path])
+  @@index([kind])
+}
+
+enum FolderKind {
+  USER
+  SYSTEM
+  TEMP
+}
+
+/**
+ * A single file. `storageKey` is the flat, opaque key used against the storage
+ * adapter — never derived from folder structure (folders are a DB concept).
+ *
+ * Search-enabling fields (`description`, `extractedText`, `tags`, `metadata`)
+ * are writable by workflows and agents. The default full-text search uses
+ * ILIKE across `name || description || extractedText || tags`; vector search
+ * plugs in later through a separate backend, reading `extractedText` for
+ * embeddings.
+ *
+ * `uploadStatus` is PENDING between `beginUpload` (presigned PUT or multipart
+ * handoff) and `completeUpload` — only COMPLETE files appear in normal listings.
+ */
+model FileObject {
+  id              String           @id @default(cuid())
+  folderId        String
+  folder          Folder           @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  name            String
+  mime            String           @default("application/octet-stream")
+  size            Int              @default(0)
+  /// SHA-256 hex of the bytes — populated by completeUpload. Used for dedupe and change detection.
+  checksum        String?
+  /// Flat storage key: "files/{fileId}". Never encodes folder structure.
+  storageKey      String           @unique
+
+  /// Human- or AI-written summary. Indexed for keyword search.
+  description     String?
+  /// OCR / PDF-to-text / transcript output. Indexed for keyword + vector search.
+  extractedText   String?          @db.Text
+  tags            String[]         @default([])
+  /// Free-form metadata: EXIF, author, page count, source URL, etc.
+  metadata        Json?
+
+  uploadStatus    FileUploadStatus @default(PENDING)
+  uploadedAt      DateTime?
+  indexStatus     FileIndexStatus  @default(PENDING)
+  indexedAt       DateTime?
+
+  createdByUserId String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([folderId])
+  @@index([mime])
+  @@index([uploadStatus])
+  @@index([indexStatus])
+}
+
+enum FileUploadStatus {
+  PENDING
+  COMPLETE
+  FAILED
+}
+
+enum FileIndexStatus {
+  PENDING
+  EXTRACTING
+  INDEXED
+  SKIPPED
+  FAILED
 }

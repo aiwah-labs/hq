@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@hq/actions": "workspace:*",
+    "@hq/auth": "workspace:*",
     "@hq/objects": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },

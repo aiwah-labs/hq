@@ -5,10 +5,15 @@ import { registerContentRoutes } from './content';
 import { registerRuntimeRoutes } from './runtime';
 import { registerObjectRoutes } from './objects';
 import { registerActionRoutes } from './actions';
+import { registerApprovalRoutes } from './approvals';
+import { registerActivityRoutes } from './activity';
 import { registerMessagingRoutes } from './messaging';
 import { registerAgentRoutes } from './agents';
 import { registerWorkflowRoutes } from './workflows';
 import { registerNotesRoutes } from './notes';
+import { registerInboxRoutes } from './inbox';
+import { registerIntegrationRoutes } from './integrations';
+import { registerFilesRoutes } from './files';
 
 export async function registerV1Routes(app: FastifyInstance) {
   await registerMeRoute(app);
@@ -17,8 +22,13 @@ export async function registerV1Routes(app: FastifyInstance) {
   await registerRuntimeRoutes(app);
   await registerObjectRoutes(app);
   await registerActionRoutes(app);
+  await registerApprovalRoutes(app);
+  await registerActivityRoutes(app);
   await registerMessagingRoutes(app);
   await registerAgentRoutes(app);
   await registerWorkflowRoutes(app);
   await registerNotesRoutes(app);
+  await registerInboxRoutes(app);
+  await registerIntegrationRoutes(app);
+  await registerFilesRoutes(app);
 }

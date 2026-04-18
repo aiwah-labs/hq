@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@hq/db": "workspace:*",
-    "@hq/auth": "workspace:*"
+    "@hq/auth": "workspace:*",
+    "zod": "^3.0.0"
   },
   "license": "MIT"
 }

@@ -1,35 +1,26 @@
-import { UserRole, UserStatus } from '@hq/db';
-import { createServiceContext, listUsers } from '@hq/services';
+import Link from 'next/link';
+import { listUsers, summarizeUserAuth } from '@hq/services';
 import {
   Alert,
   Badge,
   Card,
   CardBody,
-  CardHeader,
-
-  Field,
-  Input,
-  Label,
   Select,
-  Table,
-  TableWrap,
+  SubmitButton,
   TBody,
   TD,
   TH,
   THead,
   TR,
-  SubmitButton,
+  Table,
+  TableWrap,
 } from '@/components/ui';
 import { requirePermission } from '@/lib/auth';
 import { ROUTE_PERMISSIONS } from '@/lib/access';
 import { setUserStatusAction, updateUserRoleAction } from './actions';
-import { CreateUserModal } from './create-user-modal';
 
 interface Props {
-  searchParams: Promise<{
-    success?: string;
-    error?: string;
-  }>;
+  searchParams: Promise<{ success?: string; error?: string }>;
 }
 
 function toLabel(value: string): string {
@@ -39,8 +30,7 @@ function toLabel(value: string): string {
 
 export default async function UsersPage({ searchParams }: Props) {
   const principal = await requirePermission(ROUTE_PERMISSIONS.users);
-  const context = createServiceContext(principal);
-  const users = await listUsers(context);
+  const users = await listUsers();
   const { success, error } = await searchParams;
 
   return (
@@ -48,16 +38,22 @@ export default async function UsersPage({ searchParams }: Props) {
       {success ? <Alert tone="success">{success}</Alert> : null}
       {error ? <Alert tone="danger">{error}</Alert> : null}
 
-      {/* Page header with toggle */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="font-display text-[18px] font-semibold leading-tight tracking-tight @sm:text-[22px]">Users</h1>
-          <p className="mt-0.5 text-[13px] text-muted">{users.length} user{users.length !== 1 ? 's' : ''}</p>
+          <h1 className="font-display text-[18px] font-semibold leading-tight tracking-tight">Users</h1>
+          <p className="mt-0.5 text-[13px] text-muted">
+            {users.length} user{users.length !== 1 ? 's' : ''} · Identity is authoritative in HQ — SSO maps into
+            these records.
+          </p>
         </div>
-        <CreateUserModal isSuperadmin={principal.isSuperadmin} />
+        <Link
+          href="/users/new"
+          className="inline-flex h-8 items-center rounded-[6px] border border-brand-teal bg-brand-teal px-3 text-[13px] font-medium text-white hover:bg-brand-teal-dark"
+        >
+          New user
+        </Link>
       </div>
 
-      {/* Users table */}
       <Card>
         <CardBody className="p-0">
           <TableWrap>
@@ -65,72 +61,68 @@ export default async function UsersPage({ searchParams }: Props) {
               <THead>
                 <TR className="border-b-0">
                   <TH>Email</TH>
+                  <TH>Name</TH>
+                  <TH>Auth</TH>
                   <TH>Role</TH>
                   <TH>Status</TH>
-                  <TH>Actions</TH>
+                  <TH className="text-right">Actions</TH>
                 </TR>
               </THead>
               <TBody>
                 {users.map((user) => {
-                  const targetRole = user.role;
-                  const adminCannotEdit = !principal.isSuperadmin && (targetRole === UserRole.ADMIN || user.isSuperadmin);
+                  const auth = summarizeUserAuth(user);
                   const isSelf = principal.userId === user.id;
-
+                  const external = auth.externalProviders[0];
                   return (
                     <TR key={user.id}>
                       <TD>
-                        <div>
+                        <div className="flex flex-col">
                           <span className="font-medium">{user.email}</span>
-                          {user.isSuperadmin ? (
-                            <span className="ml-1.5 text-[11px] text-[var(--app-muted)]">SA</span>
+                          {external ? (
+                            <span className="text-[11px] text-muted">
+                              subject: {external.subject.slice(0, 18)}
+                              {external.subject.length > 18 ? '…' : ''}
+                            </span>
                           ) : null}
                         </div>
                       </TD>
+                      <TD>{user.name ?? <span className="text-muted">—</span>}</TD>
                       <TD>
-                        <Badge tone="teal">{toLabel(user.role)}</Badge>
+                        <Badge tone={external ? 'info' : auth.hasLocalPassword ? 'neutral' : 'warning'}>
+                          {auth.primaryLabel}
+                        </Badge>
                       </TD>
                       <TD>
-                        <Badge tone={user.status === UserStatus.ACTIVE ? 'success' : 'danger'}>{toLabel(user.status)}</Badge>
+                        <form action={updateUserRoleAction} className="flex items-center gap-1.5">
+                          <input type="hidden" name="userId" value={user.id} />
+                          <Select name="role" defaultValue={user.role} size="sm" className="min-w-[90px]">
+                            <option value="ADMIN">Admin</option>
+                            <option value="MEMBER">Member</option>
+                          </Select>
+                          <SubmitButton size="xs" variant="secondary">
+                            Save
+                          </SubmitButton>
+                        </form>
                       </TD>
                       <TD>
-                        <div className="flex flex-col gap-1.5 @sm:flex-row @sm:items-center @sm:gap-2">
-                          <form action={updateUserRoleAction} className="flex items-center gap-1.5">
-                            <input type="hidden" name="userId" value={user.id} />
-                            <Select
-                              name="role"
-                              defaultValue={user.role}
-                              size="sm"
-                              className="min-w-[90px]"
-                              disabled={adminCannotEdit || user.isSuperadmin}
-                            >
-                              {principal.isSuperadmin ? <option value={UserRole.ADMIN}>Admin</option> : null}
-                              <option value={UserRole.MEMBER}>Member</option>
-                              <option value={UserRole.BOT}>Bot</option>
-                            </Select>
-                            <SubmitButton
-                              size="xs"
-                              variant="secondary"
-                              disabled={adminCannotEdit || user.isSuperadmin}
-                            >
-                              Save
-                            </SubmitButton>
-                          </form>
-                          <form action={setUserStatusAction}>
-                            <input type="hidden" name="userId" value={user.id} />
-                            <input
-                              type="hidden"
-                              name="status"
-                              value={user.status === UserStatus.ACTIVE ? UserStatus.INACTIVE : UserStatus.ACTIVE}
-                            />
-                            <SubmitButton
-                              size="xs"
-                              variant="subtle"
-                              disabled={adminCannotEdit || user.isSuperadmin || (isSelf && user.status === UserStatus.ACTIVE)}
-                            >
-                              {user.status === UserStatus.ACTIVE ? 'Deactivate' : 'Activate'}
-                            </SubmitButton>
-                          </form>
-                        </div>
+                        <Badge tone={user.status === 'ACTIVE' ? 'success' : 'danger'}>{toLabel(user.status)}</Badge>
+                      </TD>
+                      <TD className="text-right">
+                        <form action={setUserStatusAction} className="inline">
+                          <input type="hidden" name="userId" value={user.id} />
+                          <input
+                            type="hidden"
+                            name="status"
+                            value={user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'}
+                          />
+                          <SubmitButton
+                            size="xs"
+                            variant="subtle"
+                            disabled={isSelf && user.status === 'ACTIVE'}
+                          >
+                            {user.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                          </SubmitButton>
+                        </form>
                       </TD>
                     </TR>
                   );

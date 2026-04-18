@@ -45,7 +45,7 @@ function buildNoPermissions(): PermissionMap {
   };
 }
 
-function userPrincipalFromData(input: {
+export function userPrincipalFromData(input: {
   userId: string;
   email: string;
   dbRole: DbRole;
