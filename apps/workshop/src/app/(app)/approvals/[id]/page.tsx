@@ -4,6 +4,7 @@ import { PERMISSIONS } from '@/lib/access';
 import { db } from '@hq/db';
 import { actionRegistry, serializeAction } from '@hq/actions';
 import { ApprovalDecisionForm } from '@/components/approvals/ApprovalDecisionForm';
+import { ActivityTimeline } from '@/components/activity/activity-timeline';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +73,13 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
           Decided {approval.decidedAt?.toISOString()} by {approval.decidedByUserId ?? 'system'}.
         </div>
       )}
+
+      <div className="border-t border-[var(--border)] px-6 py-4">
+        <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+          Activity
+        </h2>
+        <ActivityTimeline correlationId={approval.id} />
+      </div>
     </div>
   );
 }

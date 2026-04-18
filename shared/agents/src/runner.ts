@@ -1,5 +1,6 @@
 import { streamText, stepCountIs } from 'ai';
 import { db } from '@hq/db';
+import { emitEvent } from '@hq/events';
 import { getAgent } from './registry.js';
 import { buildModel } from './model.js';
 import { buildToolMap, buildToolTitleMap, buildAgentServiceContext } from './tools.js';
@@ -145,6 +146,18 @@ export async function executeAgentTurn(
   const toolTitles = buildToolTitleMap(def.capabilities);
   const toolNames = Object.keys(tools);
   log('debug', agentKey, 'tools.built', { tools: toolNames });
+
+  await emitEvent(ctx, 'agent.turn.started', {
+    objectType: 'AgentThread',
+    objectId: thread.id,
+    correlationId: trigger.correlationId ?? thread.id,
+    payload: {
+      agentKey,
+      threadId: thread.id,
+      triggerType: trigger.type,
+      mode: trigger.mode,
+    },
+  });
 
   // 4. Compaction config
   const threadSummary = thread.summary;
@@ -305,6 +318,13 @@ export async function executeAgentTurn(
       }
     }
   } catch (streamErr) {
+    const streamErrMsg = streamErr instanceof Error ? streamErr.message : String(streamErr);
+    await emitEvent(ctx, 'agent.turn.failed', {
+      objectType: 'AgentThread',
+      objectId: thread.id,
+      correlationId: trigger.correlationId ?? thread.id,
+      payload: { agentKey, threadId: thread.id, error: streamErrMsg },
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const asAny = streamErr as any;
     log('error', agentKey, 'stream.exception', {
@@ -358,6 +378,22 @@ export async function executeAgentTurn(
     costUsd,
     textLength: text?.length ?? 0,
     blocks: blocks.length,
+  });
+
+  await emitEvent(ctx, 'agent.turn.completed', {
+    objectType: 'AgentThread',
+    objectId: thread.id,
+    correlationId: trigger.correlationId ?? thread.id,
+    payload: {
+      agentKey,
+      threadId: thread.id,
+      turnMs: Date.now() - turnStart,
+      inputTokens,
+      outputTokens,
+      costUsd,
+      toolCallCount,
+      textLength: text?.length ?? 0,
+    },
   });
 
   // 10. Persist thread

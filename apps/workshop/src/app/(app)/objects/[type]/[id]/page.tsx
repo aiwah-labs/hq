@@ -6,6 +6,7 @@ import { getObjectSchema, getDetailFields, objects, objectGet } from '@hq/object
 import { createServiceContext } from '@hq/services';
 import { ObjectDetail } from '@/components/objects/object-detail';
 import { ObjectActionsMenu } from '@/components/objects/object-actions-menu';
+import { ActivityTimeline } from '@/components/activity/activity-timeline';
 import { deleteObjectAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -57,8 +58,14 @@ export default async function ObjectDetailPage({ params }: Props) {
         <ObjectActionsMenu schema={schema} id={id} deleteAction={onDelete} />
       </div>
 
-      <div className="p-6">
+      <div className="space-y-6 p-6">
         <ObjectDetail schema={schema} detailFields={detailFields} record={record} />
+        <section data-testid="object-activity">
+          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Activity
+          </h2>
+          <ActivityTimeline objectType={type} objectId={id} />
+        </section>
       </div>
     </div>
   );

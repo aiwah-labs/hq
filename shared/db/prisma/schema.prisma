@@ -369,3 +369,38 @@ enum ApprovalRequestStatus {
   EXPIRED
   CANCELLED
 }
+
+// ─── Platform Events ─────────────────────────────────────────────────────────
+
+/**
+ * Inspectable audit event. Emitted by the object runtime, action dispatcher,
+ * workflow engine, agent runner, and approval flow. Powers the activity
+ * timeline in Workshop and the `GET /v1/activity` endpoints.
+ *
+ * `correlationId` groups related events (e.g. all events from a single
+ * workflow run or approval decision).
+ */
+model PlatformEvent {
+  id                  String    @id @default(cuid())
+  type                String
+  actorType           String
+  actorId             String
+  objectType          String?
+  objectId            String?
+  actionName          String?
+  workflowRunId       String?
+  agentRunId          String?
+  approvalRequestId   String?
+  correlationId       String?
+  payload             Json      @default("{}")
+  createdAt           DateTime  @default(now())
+
+  @@index([type])
+  @@index([objectType, objectId])
+  @@index([actorType, actorId])
+  @@index([actionName])
+  @@index([workflowRunId])
+  @@index([agentRunId])
+  @@index([correlationId])
+  @@index([createdAt])
+}

@@ -1,4 +1,4 @@
-export { defineWorkflow, getWorkflow, listWorkflows } from './registry.js';
-export type { WorkflowDefinition, WorkflowNode, WorkflowTrigger } from './types.js';
+export { defineWorkflow, getWorkflow, listWorkflows, getWorkflows, serializeWorkflowDef } from './registry.js';
+export type { WorkflowDefinition, WorkflowNode, WorkflowTrigger, NodeDef, EdgeDef, StepResult, StepEval, WorkflowExecutionContext } from './types.js';
 
 import './workflows/ops/data-quality.js';

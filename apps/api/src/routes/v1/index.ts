@@ -6,6 +6,7 @@ import { registerRuntimeRoutes } from './runtime';
 import { registerObjectRoutes } from './objects';
 import { registerActionRoutes } from './actions';
 import { registerApprovalRoutes } from './approvals';
+import { registerActivityRoutes } from './activity';
 import { registerMessagingRoutes } from './messaging';
 import { registerAgentRoutes } from './agents';
 import { registerWorkflowRoutes } from './workflows';
@@ -19,6 +20,7 @@ export async function registerV1Routes(app: FastifyInstance) {
   await registerObjectRoutes(app);
   await registerActionRoutes(app);
   await registerApprovalRoutes(app);
+  await registerActivityRoutes(app);
   await registerMessagingRoutes(app);
   await registerAgentRoutes(app);
   await registerWorkflowRoutes(app);

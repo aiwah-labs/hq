@@ -68,6 +68,14 @@ export async function executeWorkflow(opts: ExecuteWorkflowOptions): Promise<Exe
 
   await updateRunStatus(run.id, 'running');
 
+  await emitEvent(opts.serviceContext, 'workflow.run.started', {
+    objectType: 'WorkflowRun',
+    objectId: run.id,
+    workflowRunId: run.id,
+    correlationId: opts.correlationId ?? run.id,
+    payload: { workflowKey: def.key, runId: run.id, triggerType: opts.triggerType },
+  });
+
   // Build execution context
   const ctx: WorkflowExecutionContext = {
     runId: run.id,
@@ -107,7 +115,9 @@ export async function executeWorkflow(opts: ExecuteWorkflowOptions): Promise<Exe
     await emitEvent(opts.serviceContext, 'workflow.run.completed', {
       objectType: 'WorkflowRun',
       objectId: run.id,
-      payload: { workflowKey: def.key, runId: run.id },
+      workflowRunId: run.id,
+      correlationId: opts.correlationId ?? run.id,
+      payload: { workflowKey: def.key, runId: run.id, stepCount: Object.keys(ctx.steps).length },
     });
 
     return {
@@ -127,6 +137,8 @@ export async function executeWorkflow(opts: ExecuteWorkflowOptions): Promise<Exe
     await emitEvent(opts.serviceContext, 'workflow.run.failed', {
       objectType: 'WorkflowRun',
       objectId: run.id,
+      workflowRunId: run.id,
+      correlationId: opts.correlationId ?? run.id,
       payload: { workflowKey: def.key, runId: run.id, error: errorMsg },
     });
 
@@ -283,6 +295,8 @@ async function executeStepWithRetry(
       await emitEvent(ctx.serviceContext, 'workflow.step.failed', {
         objectType: 'WorkflowStepLog',
         objectId: stepLog.id,
+        workflowRunId: ctx.runId,
+        correlationId: ctx.runId,
         payload: { workflowKey: ctx.workflowKey, runId: ctx.runId, nodeId: node.id, error: lastError, attempt },
       });
 

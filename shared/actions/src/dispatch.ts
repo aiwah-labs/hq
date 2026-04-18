@@ -19,6 +19,7 @@
 import type { AuthPrincipal, PermissionKey } from '@hq/auth/types';
 import { can } from '@hq/auth/policy';
 import { createServiceContext, type ServiceContext } from '@hq/services';
+import { emitEvent } from '@hq/events';
 import { actionRegistry } from './registry.js';
 import type { ActionDefinition, ActionRisk } from './types.js';
 import { inferActionRisk } from './types.js';
@@ -240,6 +241,11 @@ export async function dispatchAction<T = unknown>(
   const actor = principalActor(principal);
   const audit = opts?.audit ?? defaultAuditSink();
 
+  // Build the service context once so we can reuse it for handler + event emit.
+  const ctx = opts?.buildContext
+    ? opts.buildContext(principal)
+    : createServiceContext(principal, { channelRef: opts?.channelRef });
+
   // Approval gate
   if (shouldRequireApproval(action, principal, opts)) {
     const approvalReq = await audit.createApprovalRequest({
@@ -259,6 +265,12 @@ export async function dispatchAction<T = unknown>(
       status: 'PENDING_APPROVAL',
       approvalRequestId: approvalReq.id,
       correlationId: opts?.correlationId,
+    });
+    await emitEvent(ctx, 'action.approval_requested', {
+      actionName: action.name,
+      approvalRequestId: approvalReq.id,
+      correlationId: opts?.correlationId ?? approvalReq.id,
+      payload: { risk, reason: action.approval?.reason, executionId: exec.id },
     });
     return {
       ok: true,
@@ -288,9 +300,13 @@ export async function dispatchAction<T = unknown>(
     // Audit write failure must not break the caller — log and continue.
   }
 
-  const ctx = opts?.buildContext
-    ? opts.buildContext(principal)
-    : createServiceContext(principal, { channelRef: opts?.channelRef });
+  const correlationId = opts?.correlationId ?? execId;
+  await emitEvent(ctx, 'action.started', {
+    actionName: action.name,
+    approvalRequestId: opts?.approvedRequestId,
+    correlationId,
+    payload: { risk, executionId: execId },
+  });
 
   const startedAt = Date.now();
   try {
@@ -306,6 +322,12 @@ export async function dispatchAction<T = unknown>(
         /* ignore */
       }
     }
+    await emitEvent(ctx, 'action.completed', {
+      actionName: action.name,
+      approvalRequestId: opts?.approvedRequestId,
+      correlationId,
+      payload: { risk, executionId: execId, durationMs: Date.now() - startedAt },
+    });
     return { ok: true, result, executionId: execId, risk };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -320,6 +342,12 @@ export async function dispatchAction<T = unknown>(
         /* ignore */
       }
     }
+    await emitEvent(ctx, 'action.failed', {
+      actionName: action.name,
+      approvalRequestId: opts?.approvedRequestId,
+      correlationId,
+      payload: { risk, executionId: execId, error: message },
+    });
     return {
       ok: false,
       status: 500,
