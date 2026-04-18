@@ -180,25 +180,36 @@ so one bad key doesn't abort the batch.
 Small recipes you can drop into your own module. All of them subscribe to
 events — no service-layer edits required.
 
+Each example uses `subscribe()` from [`@hq/events/router`](../shared/events/src/router.ts).
+The handler receives a `PlatformEventNotification` (id, type, objectType,
+objectId). Build a `ServiceContext` for the work — a system principal is fine
+for background enrichment (see the sweep worker for the pattern).
+
 ### Anti-virus scan before surfacing a file
 
 ```ts
-onEvent('file.created', async (ctx, { objectId }) => {
-  const file = await getFile(ctx, objectId);
+import { subscribe } from '@hq/events/router';
+
+subscribe('file.created', async (event) => {
+  if (!event.objectId) return;
+  const ctx = await makeSystemContext();
+  const file = await getFile(ctx, event.objectId);
   const stream = await openFileStream(ctx, file.id);
   const verdict = await scan(stream);
   if (verdict.infected) {
     await deleteFile(ctx, file.id);
     await notifyQuarantine(ctx, { fileId: file.id, threat: verdict.signature });
   }
-});
+}, { source: 'av-scanner' });
 ```
 
 ### Image thumbnails
 
 ```ts
-onEvent('file.created', async (ctx, { objectId }) => {
-  const file = await getFile(ctx, objectId);
+subscribe('file.created', async (event) => {
+  if (!event.objectId) return;
+  const ctx = await makeSystemContext();
+  const file = await getFile(ctx, event.objectId);
   if (!file.mime.startsWith('image/')) return;
   const stream = await openFileStream(ctx, file.id);
   const thumb = await resize(stream, { width: 320 });
@@ -210,30 +221,34 @@ onEvent('file.created', async (ctx, { objectId }) => {
     bytes: thumb,
     metadata: { sourceFileId: file.id },
   });
-});
+}, { source: 'thumbnailer' });
 ```
 
 ### Full-text extraction into search
 
 ```ts
-onEvent('file.created', async (ctx, { objectId }) => {
-  const file = await getFile(ctx, objectId);
+subscribe('file.created', async (event) => {
+  if (!event.objectId) return;
+  const ctx = await makeSystemContext();
+  const file = await getFile(ctx, event.objectId);
   if (file.mime !== 'application/pdf') return;
   const text = await extractPdfText(await openFileStream(ctx, file.id));
   await updateFileMetadata(ctx, file.id, { indexStatus: 'INDEXED' });
   await getFileSearchBackend().index(ctx, { fileId: file.id, text });
-});
+}, { source: 'pdf-indexer' });
 ```
 
 ### Auto-folder uploads by type
 
 ```ts
-onEvent('file.created', async (ctx, { objectId }) => {
-  const file = await getFile(ctx, objectId);
+subscribe('file.created', async (event) => {
+  if (!event.objectId) return;
+  const ctx = await makeSystemContext();
+  const file = await getFile(ctx, event.objectId);
   if (!file.mime.startsWith('image/')) return;
   const images = await ensureFolder(ctx, { path: '/Images', kind: 'USER' });
   if (file.folderId !== images.id) await moveFile(ctx, file.id, images.id);
-});
+}, { source: 'image-router' });
 ```
 
 ## Code map
