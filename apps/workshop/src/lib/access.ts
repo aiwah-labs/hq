@@ -69,6 +69,7 @@ export const ROUTE_PERMISSIONS = {
   actions: PERMISSIONS.actionsView,
   audit: PERMISSIONS.auditView,
   notes: PERMISSIONS.workshopView,
+  files: PERMISSIONS.workshopView,
   inbox: PERMISSIONS.workshopView,
   integrations: PERMISSIONS.integrationsView,
   jobs: PERMISSIONS.adminSurface,

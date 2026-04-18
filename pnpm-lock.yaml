@@ -50,6 +50,9 @@ importers:
       '@hq/events':
         specifier: workspace:*
         version: link:../../shared/events
+      '@hq/files':
+        specifier: workspace:*
+        version: link:../../shared/files
       '@hq/integrations':
         specifier: workspace:*
         version: link:../../shared/integrations
@@ -62,6 +65,9 @@ importers:
       '@hq/services':
         specifier: workspace:*
         version: link:../../shared/services
+      '@hq/storage':
+        specifier: workspace:*
+        version: link:../../shared/storage
       '@hq/workflows':
         specifier: workspace:*
         version: link:../../shared/workflows
@@ -118,6 +124,9 @@ importers:
       '@hq/db':
         specifier: workspace:*
         version: link:../../shared/db
+      '@hq/files':
+        specifier: workspace:*
+        version: link:../../shared/files
       '@hq/integrations':
         specifier: workspace:*
         version: link:../../shared/integrations
@@ -130,6 +139,9 @@ importers:
       '@hq/services':
         specifier: workspace:*
         version: link:../../shared/services
+      '@hq/storage':
+        specifier: workspace:*
+        version: link:../../shared/storage
       lucide-react:
         specifier: ^0.400.0
         version: 0.400.0(react@19.2.5)
@@ -261,6 +273,34 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@24.12.2)(jiti@2.6.1)(tsx@4.21.0)
 
+  shared/files:
+    dependencies:
+      '@hq/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@hq/db':
+        specifier: workspace:*
+        version: link:../db
+      '@hq/events':
+        specifier: workspace:*
+        version: link:../events
+      '@hq/services':
+        specifier: workspace:*
+        version: link:../services
+      '@hq/storage':
+        specifier: workspace:*
+        version: link:../storage
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.17
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.17)(jiti@2.6.1)(tsx@4.21.0)
+
   shared/integrations:
     dependencies:
       '@hq/auth':
@@ -348,6 +388,9 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@20.19.39)(jiti@2.6.1)(tsx@4.21.0)
 
   shared/workflows:
     dependencies:

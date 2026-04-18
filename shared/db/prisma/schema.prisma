@@ -516,3 +516,111 @@ model OAuthState {
   @@index([expiresAt])
   @@index([userId])
 }
+
+// ─── Files ───────────────────────────────────────────────────────────────────
+
+/**
+ * Folder tree. Files live in exactly one folder; folders form a self-referential
+ * hierarchy. `path` is the denormalized absolute path ("/Contracts/2026"),
+ * recomputed when a folder is renamed or moved. Used for prefix-scoped search
+ * and cheap breadcrumbs.
+ *
+ * Storage bytes are keyed flat ("files/{fileId}") regardless of folder tree —
+ * moving or renaming a folder is a DB operation only, no S3 copy.
+ *
+ *   kind=USER    normal user-organized folders
+ *   kind=SYSTEM  platform-owned (/System/Imports, /System/Exports). Not deletable via API.
+ *   kind=TEMP    swept by `files.sweep-temp` when files exceed `retentionDays`.
+ */
+model Folder {
+  id              String       @id @default(cuid())
+  parentId        String?
+  parent          Folder?      @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children        Folder[]     @relation("FolderTree")
+  name            String
+  /// Materialized absolute path ("/Contracts/2026"). Kept in sync with parent tree.
+  path            String       @unique
+  kind            FolderKind   @default(USER)
+  /// When set on TEMP folders, the sweep job deletes files older than this.
+  retentionDays   Int?
+  /// Free-form hint consumed by external indexers (RAG, thumbnails, OCR).
+  /// e.g. `{ "extractText": true, "embed": true, "model": "text-embedding-3-small" }`
+  indexConfig     Json?
+  createdByUserId String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  files           FileObject[]
+
+  @@unique([parentId, name])
+  @@index([parentId])
+  @@index([path])
+  @@index([kind])
+}
+
+enum FolderKind {
+  USER
+  SYSTEM
+  TEMP
+}
+
+/**
+ * A single file. `storageKey` is the flat, opaque key used against the storage
+ * adapter — never derived from folder structure (folders are a DB concept).
+ *
+ * Search-enabling fields (`description`, `extractedText`, `tags`, `metadata`)
+ * are writable by workflows and agents. The default full-text search uses
+ * ILIKE across `name || description || extractedText || tags`; vector search
+ * plugs in later through a separate backend, reading `extractedText` for
+ * embeddings.
+ *
+ * `uploadStatus` is PENDING between `beginUpload` (presigned PUT or multipart
+ * handoff) and `completeUpload` — only COMPLETE files appear in normal listings.
+ */
+model FileObject {
+  id              String           @id @default(cuid())
+  folderId        String
+  folder          Folder           @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  name            String
+  mime            String           @default("application/octet-stream")
+  size            Int              @default(0)
+  /// SHA-256 hex of the bytes — populated by completeUpload. Used for dedupe and change detection.
+  checksum        String?
+  /// Flat storage key: "files/{fileId}". Never encodes folder structure.
+  storageKey      String           @unique
+
+  /// Human- or AI-written summary. Indexed for keyword search.
+  description     String?
+  /// OCR / PDF-to-text / transcript output. Indexed for keyword + vector search.
+  extractedText   String?          @db.Text
+  tags            String[]         @default([])
+  /// Free-form metadata: EXIF, author, page count, source URL, etc.
+  metadata        Json?
+
+  uploadStatus    FileUploadStatus @default(PENDING)
+  uploadedAt      DateTime?
+  indexStatus     FileIndexStatus  @default(PENDING)
+  indexedAt       DateTime?
+
+  createdByUserId String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([folderId])
+  @@index([mime])
+  @@index([uploadStatus])
+  @@index([indexStatus])
+}
+
+enum FileUploadStatus {
+  PENDING
+  COMPLETE
+  FAILED
+}
+
+enum FileIndexStatus {
+  PENDING
+  EXTRACTING
+  INDEXED
+  SKIPPED
+  FAILED
+}

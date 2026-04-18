@@ -16,6 +16,8 @@
     "@hq/services": "workspace:*",
     "@hq/integrations": "workspace:*",
     "@hq/jobs": "workspace:*",
+    "@hq/files": "workspace:*",
+    "@hq/storage": "workspace:*",
     "lucide-react": "^0.400.0",
     "next": "^15.0.0",
     "react": "^19.0.0",

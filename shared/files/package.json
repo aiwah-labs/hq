@@ -1,18 +1,20 @@
 {
-  "name": "@hq/storage",
+  "name": "@hq/files",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
-  "types": "./src/index.ts",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.840.0",
-    "@aws-sdk/s3-request-presigner": "^3.840.0"
+    "@hq/auth": "workspace:*",
+    "@hq/db": "workspace:*",
+    "@hq/events": "workspace:*",
+    "@hq/services": "workspace:*",
+    "@hq/storage": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^22.10.2",
     "typescript": "^5.7.2",
     "vitest": "^3.0.0"
   },

@@ -25,6 +25,9 @@ export interface SerializedField {
   target?: string;
   kind?: FieldDefinition['kind'];
   foreignKey?: string;
+  onDelete?: FieldDefinition['onDelete'];
+  autoCreate?: FieldDefinition['autoCreate'];
+  accept?: string;
   list?: FieldDefinition['list'];
   detail?: FieldDefinition['detail'];
   form?: FieldDefinition['form'];
@@ -67,6 +70,9 @@ export function serializeField(name: string, field: FieldDefinition): Serialized
     'target',
     'kind',
     'foreignKey',
+    'onDelete',
+    'autoCreate',
+    'accept',
     'list',
     'detail',
     'form',

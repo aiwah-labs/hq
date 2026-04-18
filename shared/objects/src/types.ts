@@ -1,6 +1,10 @@
 /**
  * Object field type union.
  * `date`/`json` are first-class scalars (previously handled ad-hoc in schema helpers).
+ * `file`/`files`/`folder` integrate with the files module:
+ *   - `file` holds a single FileObject id
+ *   - `files` holds a list of FileObject ids
+ *   - `folder` holds a Folder id (often paired with `autoCreate`)
  */
 export type FieldType =
   | 'string'
@@ -10,7 +14,10 @@ export type FieldType =
   | 'enum'
   | 'date'
   | 'json'
-  | 'relation';
+  | 'relation'
+  | 'file'
+  | 'files'
+  | 'folder';
 
 /** Format hint for string/text/number fields. Guides form inputs and field rendering. */
 export type FieldFormat =
@@ -66,6 +73,27 @@ export interface FieldDefinition {
   target?: string;
   kind?: 'hasMany' | 'belongsTo';
   foreignKey?: string;
+  /**
+   * Cascade behavior for `file`/`files`/`folder` and `relation` fields when
+   * the parent record is deleted. Indexers and the files module honor this
+   * hint — the generic crud layer does not enforce it directly.
+   */
+  onDelete?: 'cascade' | 'nullify' | 'restrict';
+  /**
+   * Folder auto-creation hint. Used with `folder` fields: when a record is
+   * created the files module can `ensureFolder(template)` and store the
+   * resulting folder id on the field. `{name}` / `{id}` are substituted from
+   * the record's display field / id.
+   *
+   * Example: `autoCreate: { template: '/Products/{name}' }` on Product.assets
+   * creates `/Products/Acme Widget/` when a Product is inserted.
+   */
+  autoCreate?: { template: string; kind?: 'USER' | 'SYSTEM' | 'TEMP' };
+  /**
+   * Optional MIME prefix filter for `file`/`files` fields (e.g. `image/`).
+   * Hints the upload UI and file picker to restrict content.
+   */
+  accept?: string;
   list?: FieldListMetadata;
   detail?: FieldDetailMetadata;
   form?: FieldFormMetadata;

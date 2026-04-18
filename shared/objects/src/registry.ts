@@ -15,9 +15,16 @@
  */
 import type { ObjectDefinition } from './types.js';
 import { moduleObjects } from './modules/index.js';
+import { filesPlatformObjects } from './platform/files.js';
 
-/** Platform-level object definitions that ship with every HQ deployment. */
-const platformObjects: Record<string, ObjectDefinition> = {};
+/**
+ * Platform-level object definitions that ship with every HQ deployment.
+ * Today: Folder + FileObject (the files module). Users and Sessions stay out
+ * of the generic object machinery — they have bespoke UI and policy.
+ */
+const platformObjects: Record<string, ObjectDefinition> = {
+  ...filesPlatformObjects,
+};
 
 export const objects: Record<string, ObjectDefinition> = {
   ...platformObjects,

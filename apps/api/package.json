@@ -19,6 +19,8 @@
     "@hq/events": "workspace:*",
     "@hq/services": "workspace:*",
     "@hq/integrations": "workspace:*",
+    "@hq/files": "workspace:*",
+    "@hq/storage": "workspace:*",
     "fastify": "^5.0.0",
     "@fastify/cookie": "^11.0.0",
     "@fastify/cors": "^10.0.0",

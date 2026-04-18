@@ -66,6 +66,7 @@ export type JobMap = {
     content: string;
     fieldMap?: Record<string, string>;
   };
+  'files.sweep-temp': Record<string, never>;
 };
 
 export type JobName = keyof JobMap;
