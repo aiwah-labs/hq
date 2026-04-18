@@ -78,7 +78,10 @@ export class ActionRegistry {
         objects: { reads: [objectName] },
         scopes: [readScope],
         parameters: z.object({ id: z.string().min(1) }),
-        handler: async ({ id }, ctx) => objectGet(objectName, id, ctx as never),
+        handler: async (params, ctx) => {
+          const { id } = params as { id: string };
+          return objectGet(objectName, id, ctx as never);
+        },
       };
 
       const create: ActionDefinition = {
@@ -116,7 +119,8 @@ export class ActionRegistry {
         objects: { deletes: [objectName] },
         scopes: [deleteScope],
         parameters: z.object({ id: z.string().min(1) }),
-        handler: async ({ id }, ctx) => {
+        handler: async (params, ctx) => {
+          const { id } = params as { id: string };
           await objectDelete(objectName, id, ctx as never);
           return { success: true } as const;
         },
@@ -132,12 +136,12 @@ export class ActionRegistry {
         parameters: z.object({
           updates: z.array(z.object({ id: z.string().min(1) }).passthrough()),
         }),
-        handler: async ({ updates }, ctx) =>
-          objectBulkUpdate(
-            objectName,
-            updates as Array<{ id: string } & Record<string, unknown>>,
-            ctx as never,
-          ),
+        handler: async (params, ctx) => {
+          const { updates } = params as {
+            updates: Array<{ id: string } & Record<string, unknown>>;
+          };
+          return objectBulkUpdate(objectName, updates, ctx as never);
+        },
       };
 
       const bulkDelete: ActionDefinition = {
@@ -147,8 +151,17 @@ export class ActionRegistry {
         category: 'crud',
         objects: { deletes: [objectName] },
         scopes: [deleteScope],
+        risk: 'high',
+        approval: {
+          required: true,
+          reason: `Bulk delete of ${def.pluralLabel.toLowerCase()} is destructive and non-reversible.`,
+          bypassScopes: ['approvals.decide'],
+        },
         parameters: z.object({ ids: z.array(z.string().min(1)) }),
-        handler: async ({ ids }, ctx) => objectBulkDelete(objectName, ids, ctx as never),
+        handler: async (params, ctx) => {
+          const { ids } = params as { ids: string[] };
+          return objectBulkDelete(objectName, ids, ctx as never);
+        },
       };
 
       for (const a of [list, count, get, create, update, del, bulkUpdate, bulkDelete]) {

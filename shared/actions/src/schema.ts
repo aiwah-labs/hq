@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { ObjectDefinition } from '@hq/objects';
-import type { ActionDefinition } from './types.js';
+import type { ActionDefinition, ActionRisk } from './types.js';
+import { inferActionRisk } from './types.js';
 
 export const listParamsSchema = z.object({
   q: z.string().optional(),
@@ -68,6 +69,12 @@ export interface SerializedAction {
   scopes: string[];
   objects?: ActionDefinition['objects'];
   resources?: string[];
+  risk: ActionRisk;
+  approval?: {
+    required: boolean;
+    reason?: string;
+    bypassScopes?: string[];
+  };
   parameters: JsonSchema;
 }
 
@@ -154,6 +161,14 @@ export function serializeAction(action: ActionDefinition): SerializedAction {
     scopes: action.scopes,
     objects: action.objects,
     resources: action.resources,
+    risk: inferActionRisk(action),
+    approval: action.approval?.required
+      ? {
+          required: true,
+          reason: action.approval.reason,
+          bypassScopes: action.approval.bypassScopes,
+        }
+      : undefined,
     parameters: zodToJsonSchema(action.parameters as z.ZodTypeAny),
   };
 }

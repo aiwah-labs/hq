@@ -1,7 +1,7 @@
 import { tool, jsonSchema } from 'ai';
 import { z } from 'zod';
 import { resolveCapabilities } from './capabilities.js';
-import { actionRegistry } from '@hq/actions';
+import { actionRegistry, dispatchAction } from '@hq/actions';
 import { createServiceContext } from '@hq/services';
 import type { ServiceContext } from '@hq/services';
 import type { BotScope, PermissionMap } from '@hq/auth/types';
@@ -169,11 +169,38 @@ export function buildToolMap(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       inputSchema: jsonSchema(paramSchema as any),
       execute: async (params) => {
+        // Route every agent tool call through the central dispatcher. This
+        // applies policy, risk inference, approval gating, and audit logging
+        // the same way the HTTP and MCP surfaces do — agents cannot sidestep
+        // governance by calling an action directly.
         try {
-          return await action.handler(params, ctx);
+          const principal = ctx.actor;
+          const outcome = await dispatchAction(name, params, principal, {
+            buildContext: () => ctx,
+          });
+          if (outcome.ok) {
+            if ('pending' in outcome && outcome.pending) {
+              return {
+                status: 'pending_approval',
+                approvalRequestId: outcome.approvalRequestId,
+                executionId: outcome.executionId,
+                risk: outcome.risk,
+                message:
+                  outcome.reason ??
+                  `Action '${name}' requires human approval before it can run.`,
+              };
+            }
+            return outcome.result;
+          }
+          // Surface the structured dispatcher error to the model.
+          const err = new Error(outcome.message) as Error & {
+            status?: number;
+            code?: string;
+          };
+          err.status = outcome.status;
+          err.code = outcome.code;
+          throw err;
         } catch (err) {
-          // Log for observability, then re-throw so AI SDK emits tool-error.
-          // This gives the model proper error feedback and sets isError: true on the block.
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[tool] ${toolKey} error: ${msg}`);
           throw err;

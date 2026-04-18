@@ -23,7 +23,8 @@ defineAction({
       include: { owner: { select: { id: true, name: true, email: true } } },
     });
     const now = new Date();
-    const lookahead = new Date(now.getTime() + params.lookaheadDays * 24 * 60 * 60 * 1000);
+    const lookaheadDays = params.lookaheadDays ?? 7;
+    const lookahead = new Date(now.getTime() + lookaheadDays * 24 * 60 * 60 * 1000);
 
     const [tasks, blocked, overdue, upcoming] = await Promise.all([
       ctx.db.task.findMany({ where: { projectId: project.id } }),

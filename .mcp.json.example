@@ -1,11 +1,12 @@
 {
   "mcpServers": {
-    "dataforseo": {
-      "command": "npx",
-      "args": ["dataforseo-mcp-server"],
+    "hq": {
+      "command": "pnpm",
+      "args": ["--filter", "@hq/mcp", "dev"],
+      "cwd": "/absolute/path/to/hq",
       "env": {
-        "DATAFORSEO_USERNAME": "your-dataforseo-login@email.com",
-        "DATAFORSEO_PASSWORD": "your-dataforseo-api-password"
+        "MCP_BOT_API_KEY": "hq_sk_replace_me",
+        "DATABASE_URL": "postgresql://hq:hq@localhost:5433/hq"
       }
     }
   }

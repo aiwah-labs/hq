@@ -295,3 +295,77 @@ enum TaskPriority {
   HIGH
   URGENT
 }
+
+// ─── Action governance ───────────────────────────────────────────────────────
+
+/**
+ * Audit record for every action executed through the central dispatcher.
+ * `status = PENDING_APPROVAL` rows are placeholders for the approval flow and
+ * get promoted to RUNNING/COMPLETED once the request is approved and the
+ * handler runs.
+ */
+model ActionExecution {
+  id                  String                  @id @default(cuid())
+  actionName          String
+  actorType           String // 'user' | 'bot' | 'agent' | 'workflow'
+  actorId             String
+  status              ActionExecutionStatus   @default(RUNNING)
+  risk                ActionRiskLevel         @default(LOW)
+  input               Json?
+  output              Json?
+  error               String?
+  approvalRequestId   String?                 @unique
+  approvalRequest     ActionApprovalRequest?  @relation("ApprovalExecution", fields: [approvalRequestId], references: [id], onDelete: SetNull)
+  correlationId       String?
+  startedAt           DateTime                @default(now())
+  completedAt         DateTime?
+  durationMs          Int?
+
+  @@index([actionName])
+  @@index([actorType, actorId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+enum ActionExecutionStatus {
+  PENDING_APPROVAL
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ActionRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model ActionApprovalRequest {
+  id                String                  @id @default(cuid())
+  actionName        String
+  requestedByType   String
+  requestedById     String
+  status            ApprovalRequestStatus   @default(PENDING)
+  risk              ActionRiskLevel         @default(MEDIUM)
+  reason            String?
+  input             Json
+  decidedByUserId   String?
+  decidedAt         DateTime?
+  expiresAt         DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  execution         ActionExecution?        @relation("ApprovalExecution")
+
+  @@index([status])
+  @@index([actionName])
+  @@index([createdAt])
+}
+
+enum ApprovalRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}

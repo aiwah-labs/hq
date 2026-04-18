@@ -93,6 +93,45 @@ Server actions in `apps/workshop/src/app/**/actions.ts` call handlers directly; 
 - Auto-generated CRUD actions use the object's declared scopes: `read` for list/count/get, `write` for create/update/bulkUpdate, `delete` (falling back to write) for delete/bulkDelete.
 - Actions with no scope match are filtered out of `registry.resolve(principalScopes)` — agents never see tools they cannot call.
 
+## Risk and approvals
+
+Every action has a risk level: `low | medium | high`. Set it explicitly on the definition, or let the dispatcher infer from the action shape:
+
+- `*.delete`, `*.bulkDelete`, `*.merge`, `*.archive`, `*.send` → **high**
+- `*.create`, `*.update`, `*.bulkUpdate`, actions writing objects → **medium**
+- read-only (`*.list`, `*.get`, `*.count`) → **low**
+
+Declare explicit approval when an action must never run without a human reviewing it:
+
+```ts
+export const mergeCustomer = defineAction({
+  name: 'customer.merge',
+  scopes: ['customer.write'],
+  risk: 'high',
+  approval: {
+    required: true,
+    reason: 'Merging customers is destructive and irreversible.',
+    bypassScopes: ['approvals.decide'],
+  },
+  // …
+});
+```
+
+When the dispatcher hits a gated action:
+
+1. Creates an `ActionApprovalRequest` row (status `PENDING`) plus an `ActionExecution` row (status `PENDING_APPROVAL`).
+2. Returns `{ ok: true, pending: true, approvalRequestId, executionId, risk, reason }` from `dispatchAction`. The HTTP surface returns **202 Accepted**.
+3. Callers holding any `bypassScopes` permission skip the gate and run immediately.
+
+Approvers use:
+
+- `GET /v1/approvals?status=PENDING` — queue
+- `POST /v1/approvals/:id/approve` — runs the action via `dispatchAction(..., { skipApproval: true, approvedRequestId })`
+- `POST /v1/approvals/:id/reject` — marks the request rejected and the linked execution `CANCELLED`
+- `GET /v1/action-executions` — audit trail across every surface (HTTP, MCP, agent, workflow)
+
+Permissions: `approvals.view` to read the queue, `approvals.decide` to approve/reject.
+
 ## Governance hints
 
 `objects.reads/writes/deletes` and `resources` are non-enforcing metadata. They power:

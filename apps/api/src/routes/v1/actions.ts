@@ -40,12 +40,33 @@ export async function registerActionRoutes(app: FastifyInstance) {
   });
 
   // Execute a named action via the dispatcher (unified policy / validation).
-  app.post('/v1/actions/:name', async (request) => {
+  app.post('/v1/actions/:name', async (request, reply) => {
     const { name } = z.object({ name: z.string().min(1) }).parse(request.params);
     const principal = await requireAuth(request);
 
     const outcome = await dispatchAction(name, request.body, principal);
-    if (outcome.ok) return outcome.result;
-    throw new ApiError(outcome.status, outcome.code, outcome.message, 'details' in outcome ? outcome.details : undefined);
+    if (!outcome.ok) {
+      throw new ApiError(
+        outcome.status,
+        outcome.code,
+        outcome.message,
+        'details' in outcome ? outcome.details : undefined,
+      );
+    }
+    if ('pending' in outcome && outcome.pending) {
+      reply.code(202);
+      return {
+        status: 'pending_approval',
+        approvalRequestId: outcome.approvalRequestId,
+        executionId: outcome.executionId,
+        risk: outcome.risk,
+        reason: outcome.reason,
+      };
+    }
+    return {
+      result: outcome.result,
+      executionId: outcome.executionId,
+      risk: outcome.risk,
+    };
   });
 }
