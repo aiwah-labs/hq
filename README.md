@@ -1,68 +1,137 @@
 # HQ
 
-**The operating system where your agents and employees collaborate.**
+**A serious agentic internal platform — clone it and make it yours.**
 
-HQ is a template for building self-hosted infrastructure that accelerates your organisation. Clone it, load it into a coding agent, and shape it to your business. Your data stays in your database. Your logic lives in your codebase.
-
-```bash
-git clone https://github.com/aiwah-labs/hq
-```
-
----
-
-## Getting started
-
-### Local development
-
-Prerequisites: Node.js 22+, pnpm 10+, Docker (for Postgres)
+HQ is a production-ready template for building self-hosted operational infrastructure. It ships with identity, permissions, a registry-driven object/action system, agent governance, MCP, activity timelines, diagnostics, and two example modules you can replace with your own domain. Your data stays in your database. Your logic lives in your codebase.
 
 ```bash
 git clone https://github.com/aiwah-labs/hq
 cd hq
-make setup
-make dev
+pnpm install
+pnpm db:local:bootstrap
+pnpm dev:platform
 ```
 
-Workshop runs at http://localhost:3002 · API at http://localhost:3003
+Workshop runs at **http://localhost:3002** · API at **http://localhost:3003**
 
-### Production deployment
+Default login: `admin@example.com` / `password`
 
-See [DEPLOY.md](./DEPLOY.md) for the full guide. The short version:
+---
+
+## What HQ is
+
+A template. Not a SaaS. Not a no-code tool.
+
+You fork it, load it into a coding agent, and shape it to your business. The platform takes care of the hard infrastructure so you spend time on your domain, not on rebuilding auth, permissions, and action routing.
+
+## What HQ is not
+
+HQ is not a finished product. It is not a no-code builder. It has no plugin marketplace. You are expected to write code to add your objects, actions, and workflows.
+
+---
+
+## Local setup
+
+Prerequisites: **Node.js 22+**, **pnpm 10+**, **Docker** (for Postgres)
+
+```bash
+# 1. Clone
+git clone https://github.com/aiwah-labs/hq
+cd hq
+
+# 2. Install
+pnpm install
+
+# 3. Bootstrap local Postgres (starts container, migrates, seeds)
+pnpm db:local:bootstrap
+
+# 4. Start Workshop + API
+pnpm dev:platform
+
+# 5. Check your setup
+pnpm doctor
+```
+
+Log in at http://localhost:3002 with `admin@example.com` / `password`.
+
+---
+
+## First things to try
+
+**Explore the example modules:**
+- `/objects` — Object Studio: browse the CRM (Customer, Product) and Projects/Tasks modules
+- `/projects` — project overview, portfolio, and blocked-tasks view
+- `/agents` — see the registered agents and what actions they can use
+- `/approvals` — governance queue for high-risk actions
+
+**Connect MCP:**
+
+Add to your Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "hq": {
+      "command": "node",
+      "args": ["/path/to/hq/apps/mcp/dist/server.js"],
+      "env": { "MCP_BOT_API_KEY": "your-key" }
+    }
+  }
+}
+```
+
+Or run locally: `pnpm mcp`
+
+**Replace the example module:**
+
+Projects and Tasks are a working but removable example. See [`docs/example-modules/projects.md`](./docs/example-modules/projects.md) for the removal checklist and [`docs/example-modules/README.md`](./docs/example-modules/README.md) to build your own.
+
+---
+
+## Architecture
+
+```
+Objects ──────────────── Define your entities (registry-driven CRUD + schema)
+Actions ──────────────── Universal execution layer (auth, approval, audit, MCP)
+Workflows ────────────── Deterministic chains: actions, agents, conditions, loops
+Agents ───────────────── AI actors with tool access + approval awareness
+Events ───────────────── Activity timeline: every mutation, action, workflow, agent run
+Permissions ──────────── Unified policy engine: users, bots, agents, objects, actions
+Identity ─────────────── Local auth + SSO/OIDC extension path
+MCP ──────────────────── External agent access to all actions
+Workshop ─────────────── Admin UI: objects, projects, approvals, diagnostics
+```
+
+Deep-dives: [`docs/objects.md`](./docs/objects.md) · [`docs/actions.md`](./docs/actions.md) · [`docs/agents.md`](./docs/agents.md) · [`docs/permissions.md`](./docs/permissions.md) · [`docs/mcp.md`](./docs/mcp.md)
+
+---
+
+## Adding your own domain
+
+See the builder guides:
+
+- [`docs/add-object.md`](./docs/add-object.md) — add a new object type
+- [`docs/add-action.md`](./docs/add-action.md) — add a custom action
+- [`docs/add-workflow.md`](./docs/add-workflow.md) — add a workflow
+- [`docs/add-agent.md`](./docs/add-agent.md) — add an agent
+- [`docs/example-modules/README.md`](./docs/example-modules/README.md) — build a full module
+
+---
+
+## Production deployment
+
+See [DEPLOY.md](./DEPLOY.md) for the full guide.
 
 ```bash
 # On a fresh Ubuntu VPS
 curl -fsSL https://raw.githubusercontent.com/aiwah-labs/hq/main/scripts/setup-server.sh | bash
 git clone https://github.com/aiwah-labs/hq /opt/hq
 cd /opt/hq && cp .env.example .env.prod
-# edit .env.prod
+# edit .env.prod — set DATABASE_URL, SESSION_SECRET, INTERNAL_API_SECRET
 bash scripts/first-deploy.sh
 bash scripts/setup-nginx.sh your-domain.com
 ```
 
 ---
 
-## The platform
-
-HQ gives you the building blocks to define the data structures, logic, and interfaces your business needs — then connects your team and your agents to operate through them together.
-
-**Objects** are the entities your business runs on — contacts, deals, bookings, projects, or anything else your domain requires. Define the model, and the rest of the platform picks it up automatically.
-
-**Actions** are the operations that can be executed on those entities. Whether triggered by a human in the UI, an agent mid-conversation, or a step in a workflow, every action flows through the same layer with the same permissions.
-
-**Agents** are AI that work inside your system — with access to your data, your actions, and your team's context. They can respond to messages, react to events, run on a schedule, or participate as a node in a workflow.
-
-**Workflows** are deterministic chains of actions. Define them in code, trigger them from events or schedules, and let them handle the repetitive operational work your team shouldn't have to think about.
-
-**Notes** are the shared knowledge base for your team and your agents. Agents can search and reference them, so your internal context is always available without re-explaining it.
-
-**Workshop** is the central UI your team works from. It surfaces everything — records, threads, workflow runs, agent activity — in one place. You can add more apps alongside it for different audiences.
-
-**MCP** connects your HQ instance to any external agent or LLM. Every object and action in your platform becomes a tool that Claude Desktop, Cursor, or any coding agent can use directly.
-
-**Permissions** let you decide who has access to your business data and logic. Your team members get access to what their role requires. AI agents know what they can do autonomously and what needs a human to approve first.
-
----
-
 MIT License · Built by [Aiwah Labs](https://aiwahlabs.com)
-
-Questions? [abil@aiwahlabs.com](mailto:abil@aiwahlabs.com) · [aiwahlabs.com](https://aiwahlabs.com)

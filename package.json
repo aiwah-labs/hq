@@ -16,6 +16,7 @@
     "db:local:bootstrap": "./scripts/local-postgres.sh bootstrap",
     "db:local:start": "./scripts/local-postgres.sh start",
     "db:local:stop": "./scripts/local-postgres.sh stop",
+    "doctor": "./scripts/doctor.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "pnpm -r --if-present typecheck"
