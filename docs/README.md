@@ -37,8 +37,3 @@
 
 - [`releases/0.3.md`](releases/0.3.md) — HQ 0.3 "Business Ops Template" release notes.
 - [`releases/SMOKE-CHECKLIST.md`](releases/SMOKE-CHECKLIST.md) — release-cut smoke checklist + screenshot shot list.
-
-## Planning
-
-- [`plans/`](plans/) — the HQ 0.3 "Business Ops Template" release plans.
-- [`plans/PUNCHSHEET.md`](plans/PUNCHSHEET.md) — live execution tracker.
