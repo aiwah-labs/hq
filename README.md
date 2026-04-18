@@ -1,8 +1,13 @@
 # HQ
 
-**A serious agentic internal platform — clone it and make it yours.**
+**Your data. Your logic. Your internal platform.**
 
-HQ is a production-ready template for building self-hosted operational infrastructure. It ships with identity, permissions, a registry-driven object/action system, agent governance, MCP, activity timelines, diagnostics, and two example modules you can replace with your own domain. Your data stays in your database. Your logic lives in your codebase.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Version](https://img.shields.io/github/v/release/aiwah-labs/hq)](https://github.com/aiwah-labs/hq/releases)
+[![CI](https://github.com/aiwah-labs/hq/actions/workflows/ci.yml/badge.svg)](https://github.com/aiwah-labs/hq/actions)
+[![Discussions](https://img.shields.io/github/discussions/aiwah-labs/hq)](https://github.com/aiwah-labs/hq/discussions)
+
+HQ is a production-ready template for building self-hosted operational infrastructure. Fork it, point a coding agent at it, and build your domain — not boilerplate. It ships with identity, permissions, a registry-driven object/action system, agent governance, MCP, activity timelines, diagnostics, and two removable example modules. Your data stays in your database. Your logic lives in your codebase.
 
 ```bash
 git clone https://github.com/aiwah-labs/hq
