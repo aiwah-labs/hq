@@ -134,4 +134,19 @@ bash scripts/setup-nginx.sh your-domain.com
 
 ---
 
+---
+
+## Contributing
+
+Issues and pull requests welcome. Start with
+[CONTRIBUTING.md](./CONTRIBUTING.md) for the setup, branch, commit, and
+test conventions. Security issues: [SECURITY.md](./SECURITY.md).
+
+## Changelog
+
+Notable changes are tracked in [CHANGELOG.md](./CHANGELOG.md). Full
+per-release notes live in [`docs/releases/`](./docs/releases/).
+
+---
+
 MIT License · Built by [Aiwah Labs](https://aiwahlabs.com)
