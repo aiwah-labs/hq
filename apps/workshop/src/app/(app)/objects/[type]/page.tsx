@@ -59,12 +59,28 @@ export default async function ObjectListPage({ params, searchParams }: Props) {
             {listParams.q ? ` matching "${listParams.q}"` : ''}
           </p>
         </div>
-        <Link
-          href={`/objects/${type}/new`}
-          className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-[13px] font-medium text-white"
-        >
-          New {schema.label}
-        </Link>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/objects/${type}/export?format=csv${listParams.q ? `&q=${encodeURIComponent(listParams.q)}` : ''}`}
+            className="rounded-md border border-divider bg-[var(--app-bg-elevated)] px-3 py-1.5 text-[13px] font-medium text-[var(--app-fg)] hover:bg-[var(--app-input-bg)]"
+            data-testid={`object-export-${type}`}
+          >
+            Export CSV
+          </a>
+          <Link
+            href={`/objects/${type}/import`}
+            className="rounded-md border border-divider bg-[var(--app-bg-elevated)] px-3 py-1.5 text-[13px] font-medium text-[var(--app-fg)] hover:bg-[var(--app-input-bg)]"
+            data-testid={`object-import-link-${type}`}
+          >
+            Import
+          </Link>
+          <Link
+            href={`/objects/${type}/new`}
+            className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-[13px] font-medium text-white"
+          >
+            New {schema.label}
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 p-6">

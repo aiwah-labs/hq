@@ -12,8 +12,12 @@ import {
   objectBulkDelete,
   getObjectSchema,
   listObjectSchemas,
+  exportObject,
+  previewImport,
+  executeImport,
 } from '@hq/objects';
 import { createServiceContext } from '@hq/services';
+import { enqueueJob } from '@hq/jobs';
 import { ApiError } from '../../lib/errors';
 import { requireAuth } from '../../lib/auth';
 
@@ -124,6 +128,82 @@ export async function registerObjectRoutes(app: FastifyInstance) {
     const actor = await requireAuth(request, { botScope: def.scopes.write });
     const ctx = createServiceContext(actor);
     return objectUpdate(type, id, request.body as Record<string, unknown>, ctx);
+  });
+
+  // Export records (CSV or JSON)
+  app.get('/v1/objects/:type/export', async (request, reply) => {
+    const { type } = typeParamSchema.parse(request.params);
+    const def = getObjectDef(type);
+    const actor = await requireAuth(request, { botScope: def.scopes.read });
+    const ctx = createServiceContext(actor);
+    const exportQuerySchema = z.object({
+      format: z.enum(['csv', 'json']).default('csv'),
+      fields: z
+        .union([z.string(), z.array(z.string())])
+        .transform((v) => (Array.isArray(v) ? v : v.split(',').map((s) => s.trim()).filter(Boolean)))
+        .optional(),
+      limit: z.coerce.number().int().min(1).max(50000).optional(),
+      q: z.string().optional(),
+    });
+    const parsed = exportQuerySchema.parse(request.query);
+    const out = await exportObject(type, parsed, ctx);
+    reply.header('content-type', out.contentType);
+    reply.header('content-disposition', `attachment; filename="${out.filename}"`);
+    return reply.send(out.body);
+  });
+
+  // Preview an import payload (parse + validate, no writes)
+  app.post('/v1/objects/:type/import/preview', async (request) => {
+    const { type } = typeParamSchema.parse(request.params);
+    const def = getObjectDef(type);
+    const actor = await requireAuth(request, { botScope: def.scopes.write });
+    const ctx = createServiceContext(actor);
+    const body = z
+      .object({
+        format: z.enum(['csv', 'json']),
+        content: z.string().min(1),
+        fieldMap: z.record(z.string(), z.string()).optional(),
+        sampleSize: z.number().int().min(1).max(200).optional(),
+      })
+      .parse(request.body);
+    return previewImport(type, body, ctx);
+  });
+
+  // Execute an import — sync by default, async=true routes through a job queue
+  app.post('/v1/objects/:type/import', async (request) => {
+    const { type } = typeParamSchema.parse(request.params);
+    const def = getObjectDef(type);
+    const actor = await requireAuth(request, { botScope: def.scopes.write });
+    const ctx = createServiceContext(actor);
+    const body = z
+      .object({
+        format: z.enum(['csv', 'json']),
+        content: z.string().min(1),
+        fieldMap: z.record(z.string(), z.string()).optional(),
+        async: z.boolean().default(false),
+      })
+      .parse(request.body);
+
+    if (body.async) {
+      if (actor.kind !== 'user') {
+        throw new ApiError(400, 'INVALID_ACTOR', 'Async imports require a user actor.');
+      }
+      const jobId = await enqueueJob('object.import', {
+        userId: actor.userId,
+        objectType: type,
+        format: body.format,
+        content: body.content,
+        fieldMap: body.fieldMap,
+      });
+      return { queued: true, jobId };
+    }
+
+    const result = await executeImport(
+      type,
+      { format: body.format, content: body.content, fieldMap: body.fieldMap },
+      ctx,
+    );
+    return { queued: false, ...result };
   });
 
   // Delete a record

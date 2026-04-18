@@ -111,7 +111,7 @@ export async function scheduleRecurring<T extends JobName>(
   await boss.schedule(name, cron, data as object, options ?? {});
 }
 
-export type WorkerHandler<T extends JobName> = (job: { id: string; name: string; data: JobData<T> }) => Promise<void>;
+export type WorkerHandler<T extends JobName> = (job: { id: string; name: string; data: JobData<T> }) => Promise<unknown | void>;
 
 export async function registerWorker<T extends JobName>(
   name: T,
@@ -125,10 +125,11 @@ export async function registerWorker<T extends JobName>(
     name,
     options ?? {},
     async (jobs) => {
-      // pg-boss v10 passes an array; we process one at a time
+      // pg-boss v10 passes an array; we process one at a time.
+      // Returning the handler's value persists it as the job's `output`.
       const job = Array.isArray(jobs) ? jobs[0] : jobs;
       if (!job) return;
-      await handler({ id: job.id, name: job.name, data: job.data });
+      return await handler({ id: job.id, name: job.name, data: job.data });
     }
   );
 }
