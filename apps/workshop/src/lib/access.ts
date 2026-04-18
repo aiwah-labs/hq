@@ -65,6 +65,7 @@ export const ROUTE_PERMISSIONS = {
   actions: PERMISSIONS.actionsView,
   audit: PERMISSIONS.auditView,
   notes: PERMISSIONS.workshopView,
+  diagnostics: PERMISSIONS.adminSurface,
 } as const;
 
 export const ADMIN_SURFACE_PERMISSION: PermissionKey = PERMISSIONS.adminSurface;
