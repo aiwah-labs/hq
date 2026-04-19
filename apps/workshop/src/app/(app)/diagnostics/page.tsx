@@ -36,11 +36,8 @@ export default async function DiagnosticsPage() {
     kind: 'bot' as const,
     source: 'apikey' as const,
     botId: 'system',
-    botSlug: 'system',
     botName: 'System',
     apiKeyId: '',
-    createdByUserId: '',
-    createdByEmail: '',
     scopes: [] as string[],
     permissions: {} as any,
   };
@@ -49,8 +46,8 @@ export default async function DiagnosticsPage() {
     checkHealth(ctx),
     Promise.resolve(getEnvWarnings()),
     db.actionExecution.findMany({ where: { status: 'FAILED' }, orderBy: { startedAt: 'desc' }, take: 10 }),
-    db.workflowRun.findMany({ where: { status: 'failed' }, orderBy: { startedAt: 'desc' }, take: 10 }),
-    db.agentThread.findMany({ where: { lastTurnStatus: 'failed' }, orderBy: { updatedAt: 'desc' }, take: 10 }),
+    db.workflowRun.findMany({ where: { status: 'FAILED' }, orderBy: { startedAt: 'desc' }, take: 10 }),
+    db.agentRun.findMany({ where: { status: 'FAILED' }, orderBy: { startedAt: 'desc' }, take: 10 }),
   ]);
 
   return (

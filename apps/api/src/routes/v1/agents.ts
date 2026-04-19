@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { db } from '@hq/db';
 import { scheduleJob } from '@hq/jobs';
-import { getAgents, getAgent, skillRegistry } from '@hq/agents';
+import { listAgents, getAgent, skillRegistry } from '@hq/agents';
 import { objects } from '@hq/objects';
 import { ApiError } from '../../lib/errors.js';
 import { requireUser } from '../../lib/auth.js';
@@ -22,8 +22,8 @@ export async function registerAgentRoutes(app: FastifyInstance) {
     return skillRegistry.list();
   });
 
-  // GET /v1/objects — list registered object types for capabilities reference
-  app.get('/v1/objects', async (request) => {
+  // GET /v1/object-types — list registered object types for capabilities reference
+  app.get('/v1/object-types', async (request) => {
     await requireUser(request);
     return Object.entries(objects).map(([name, def]) => ({
       name,
@@ -34,37 +34,29 @@ export async function registerAgentRoutes(app: FastifyInstance) {
     }));
   });
 
-  // GET /v1/agents — registry list + enabled status + thread counts
+  // GET /v1/agents — registry list + run counts
   app.get('/v1/agents', async (request) => {
     await requireUser(request);
-    const agents = getAgents();
+    const agents = listAgents();
 
-    const configs = await db.agentConfig.findMany();
-    const configMap = new Map(configs.map((c) => [c.agentKey, c]));
-
-    const threadCounts = await db.agentThread.groupBy({
+    const runCounts = await db.agentRun.groupBy({
       by: ['agentKey'],
       _count: { id: true },
     });
-    const threadCountMap = new Map(threadCounts.map((t) => [t.agentKey, t._count.id]));
+    const runCountMap = new Map(runCounts.map((r) => [r.agentKey, r._count.id]));
 
-    return agents.map((def) => {
-      const config = configMap.get(def.key);
-      return {
-        key: def.key,
-        name: def.name,
-        description: def.description,
-        model: def.model,
-        enabled: config?.enabled ?? true,
-        threadCount: threadCountMap.get(def.key) ?? 0,
-        capabilityCount: def.capabilities.length,
-        triggerCount: def.defaultTriggers.length,
-        config: config?.config ?? {},
-      };
-    });
+    return agents.map((def) => ({
+      key: def.key,
+      name: def.name,
+      description: def.description,
+      model: def.model,
+      runCount: runCountMap.get(def.key) ?? 0,
+      capabilityCount: def.capabilities.length,
+      triggerCount: def.defaultTriggers.length,
+    }));
   });
 
-  // GET /v1/agents/:key — agent detail + recent threads
+  // GET /v1/agents/:key — agent detail + recent runs
   app.get('/v1/agents/:key', async (request) => {
     await requireUser(request);
     const { key } = request.params as { key: string };
@@ -72,12 +64,11 @@ export async function registerAgentRoutes(app: FastifyInstance) {
     const def = getAgent(key);
     if (!def) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
 
-    const config = await db.agentConfig.findUnique({ where: { agentKey: key } });
-    const recentThreads = await db.agentThread.findMany({
+    const recentRuns = await db.agentRun.findMany({
       where: { agentKey: key },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { startedAt: 'desc' },
       take: 10,
-      select: { id: true, channelRef: true, status: true, metadata: true, createdAt: true, updatedAt: true },
+      select: { id: true, trigger: true, status: true, inputData: true, startedAt: true, finishedAt: true },
     });
 
     return {
@@ -89,54 +80,8 @@ export async function registerAgentRoutes(app: FastifyInstance) {
       defaultTriggers: def.defaultTriggers,
       channelBehavior: def.channelBehavior,
       compaction: def.compaction,
-      enabled: config?.enabled ?? true,
-      config: config?.config ?? {},
-      recentThreads,
+      recentRuns,
     };
-  });
-
-  // POST /v1/agents/:key/enable
-  app.post('/v1/agents/:key/enable', async (request) => {
-    await requireUser(request);
-    const { key } = request.params as { key: string };
-    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
-
-    await db.agentConfig.upsert({
-      where: { agentKey: key },
-      create: { agentKey: key, enabled: true },
-      update: { enabled: true },
-    });
-    return { ok: true };
-  });
-
-  // POST /v1/agents/:key/disable
-  app.post('/v1/agents/:key/disable', async (request) => {
-    await requireUser(request);
-    const { key } = request.params as { key: string };
-    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
-
-    await db.agentConfig.upsert({
-      where: { agentKey: key },
-      create: { agentKey: key, enabled: false },
-      update: { enabled: false },
-    });
-    return { ok: true };
-  });
-
-  // PATCH /v1/agents/:key/config
-  app.patch('/v1/agents/:key/config', async (request) => {
-    await requireUser(request);
-    const { key } = request.params as { key: string };
-    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
-
-    const body = parseBody(request.body, z.object({}).passthrough());
-
-    await db.agentConfig.upsert({
-      where: { agentKey: key },
-      create: { agentKey: key, config: body as object },
-      update: { config: body as object },
-    });
-    return { ok: true };
   });
 
   // POST /v1/agents/:key/message — manual trigger
@@ -151,7 +96,7 @@ export async function registerAgentRoutes(app: FastifyInstance) {
       request.body,
       z.object({
         text: z.string().optional(),
-        threadId: z.string().optional(),
+        runId: z.string().optional(),
       })
     );
 
@@ -161,15 +106,15 @@ export async function registerAgentRoutes(app: FastifyInstance) {
         type: 'message',
         text: body.text ?? 'Manual trigger',
         mode: 'mention',
-        ...(body.threadId && { threadId: body.threadId }),
+        ...(body.runId && { runId: body.runId }),
       },
     });
 
-    return { ok: true, message: 'Agent turn queued' };
+    return { ok: true, message: 'Agent run queued' };
   });
 
-  // GET /v1/agents/:key/threads — paginated thread list
-  app.get('/v1/agents/:key/threads', async (request) => {
+  // GET /v1/agents/:key/runs — paginated run list
+  app.get('/v1/agents/:key/runs', async (request) => {
     await requireUser(request);
     const { key } = request.params as { key: string };
     if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
@@ -177,82 +122,32 @@ export async function registerAgentRoutes(app: FastifyInstance) {
     const query = request.query as { cursor?: string; limit?: string };
     const limit = Math.min(100, parseInt(query.limit ?? '50'));
 
-    const threads = await db.agentThread.findMany({
+    const runs = await db.agentRun.findMany({
       where: { agentKey: key },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { startedAt: 'desc' },
       take: limit + 1,
-      select: { id: true, channelRef: true, status: true, metadata: true, summary: true, createdAt: true, updatedAt: true },
+      select: { id: true, trigger: true, status: true, inputData: true, outputData: true, error: true, startedAt: true, finishedAt: true },
       ...(query.cursor && { cursor: { id: query.cursor }, skip: 1 }),
     });
 
-    const hasMore = threads.length > limit;
-    const data = hasMore ? threads.slice(0, limit) : threads;
+    const hasMore = runs.length > limit;
+    const data = hasMore ? runs.slice(0, limit) : runs;
     return {
       data,
       nextCursor: hasMore ? data[data.length - 1]?.id : null,
     };
   });
 
-  // GET /v1/agents/:key/threads/:id — single thread with full message history
-  app.get('/v1/agents/:key/threads/:id', async (request) => {
+  // GET /v1/agents/:key/runs/:id — single run with steps
+  app.get('/v1/agents/:key/runs/:id', async (request) => {
     await requireUser(request);
     const { key, id } = request.params as { key: string; id: string };
 
-    const thread = await db.agentThread.findUnique({
-      where: { id, agentKey: key },
-    });
-    if (!thread) throw new ApiError(404, 'NOT_FOUND', 'Thread not found');
-    return thread;
-  });
-
-  // DELETE /v1/agents/:key/threads/:id — archive thread
-  app.delete('/v1/agents/:key/threads/:id', async (request) => {
-    await requireUser(request);
-    const { key, id } = request.params as { key: string; id: string };
-
-    const thread = await db.agentThread.findUnique({ where: { id, agentKey: key } });
-    if (!thread) throw new ApiError(404, 'NOT_FOUND', 'Thread not found');
-
-    await db.agentThread.update({
+    const run = await db.agentRun.findUnique({
       where: { id },
-      data: { status: 'archived' },
+      include: { steps: { orderBy: { createdAt: 'asc' } } },
     });
-    return { ok: true };
-  });
-
-  // GET /v1/agents/:key/channel-subs — list channel subscriptions
-  app.get('/v1/agents/:key/channel-subs', async (request) => {
-    await requireUser(request);
-    const { key } = request.params as { key: string };
-    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
-    return db.agentChannelSub.findMany({ where: { agentKey: key } });
-  });
-
-  // POST /v1/agents/:key/channel-subs — create channel subscription
-  app.post('/v1/agents/:key/channel-subs', async (request) => {
-    await requireUser(request);
-    const { key } = request.params as { key: string };
-    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
-
-    const body = parseBody(
-      request.body,
-      z.object({ channelId: z.string().min(1) })
-    );
-
-    return db.agentChannelSub.upsert({
-      where: { agentKey_channelId: { agentKey: key, channelId: body.channelId } },
-      create: { agentKey: key, channelId: body.channelId },
-      update: {},
-    });
-  });
-
-  // DELETE /v1/agents/:key/channel-subs/:subId — remove channel subscription
-  app.delete('/v1/agents/:key/channel-subs/:subId', async (request) => {
-    await requireUser(request);
-    const { key, subId } = request.params as { key: string; subId: string };
-    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
-
-    await db.agentChannelSub.delete({ where: { id: subId } });
-    return { ok: true };
+    if (!run || run.agentKey !== key) throw new ApiError(404, 'NOT_FOUND', 'Run not found');
+    return run;
   });
 }

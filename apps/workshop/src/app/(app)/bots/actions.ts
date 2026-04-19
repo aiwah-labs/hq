@@ -24,7 +24,7 @@ export async function createBotAction(prevState: unknown, formData: FormData): P
       name: String(formData.get('name') ?? ''),
       description: String(formData.get('description') ?? '') || undefined,
     });
-    
+
     revalidatePath('/bots');
     return { success: true };
   } catch (error) {
@@ -32,44 +32,20 @@ export async function createBotAction(prevState: unknown, formData: FormData): P
   }
 }
 
-export async function addBotMemberAction(formData: FormData): Promise<never> {
-  await requirePermission(ROUTE_PERMISSIONS.bots);
-  const api = await getSessionApiClient();
-  const botId = String(formData.get('botId') ?? '');
-
-  try {
-    await api.addBotMember({
-      botId,
-      userEmail: String(formData.get('userEmail') ?? ''),
-      membershipRole: String(formData.get('membershipRole') ?? 'VIEWER') as 'OWNER' | 'MAINTAINER' | 'VIEWER',
-    });
-  } catch (error) {
-    return redirect(`/bots?bot=${encodeURIComponent(botId)}&error=${encodeURIComponent(toErrorString(error))}`);
-  }
-
-  revalidatePath('/bots');
-  return redirect(`/bots?bot=${encodeURIComponent(botId)}&success=Member%20updated`);
-}
-
 export async function createBotKeyAction(formData: FormData): Promise<never> {
   await requirePermission(ROUTE_PERMISSIONS.bots);
   const api = await getSessionApiClient();
   const botId = String(formData.get('botId') ?? '');
-  const scopesRaw = String(formData.get('scopes') ?? '');
 
   try {
     const created = await api.createBotKey({
       botId,
-      name: String(formData.get('name') ?? ''),
-      scopes: scopesRaw
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean),
+      label: String(formData.get('label') ?? '') || undefined,
     });
 
     revalidatePath('/bots');
     return redirect(
-      `/bots?bot=${encodeURIComponent(botId)}&success=${encodeURIComponent(`Key created: ${created.prefix} (copy now)`)}&key=${encodeURIComponent(created.key)}`
+      `/bots?bot=${encodeURIComponent(botId)}&success=${encodeURIComponent(`Key created (copy now)`)}&key=${encodeURIComponent(created.key)}`
     );
   } catch (error) {
     return redirect(`/bots?bot=${encodeURIComponent(botId)}&error=${encodeURIComponent(toErrorString(error))}`);

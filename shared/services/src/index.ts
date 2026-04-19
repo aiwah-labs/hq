@@ -3,3 +3,4 @@ export * from './users.js';
 export * from './notes.js';
 export * from './health.js';
 export * from './inbox.js';
+export * from './bots.js';

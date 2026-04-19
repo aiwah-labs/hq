@@ -9,26 +9,29 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hq/db": "workspace:*",
-    "@hq/auth": "workspace:*",
     "@hq/api-client": "workspace:*",
-    "@hq/objects": "workspace:*",
-    "@hq/services": "workspace:*",
+    "@hq/auth": "workspace:*",
+    "@hq/db": "workspace:*",
+    "@hq/files": "workspace:*",
     "@hq/integrations": "workspace:*",
     "@hq/jobs": "workspace:*",
-    "@hq/files": "workspace:*",
+    "@hq/objects": "workspace:*",
+    "@hq/services": "workspace:*",
     "@hq/storage": "workspace:*",
     "lucide-react": "^0.400.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.0.0"
   },
   "license": "MIT"
 }
