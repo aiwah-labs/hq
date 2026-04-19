@@ -24,15 +24,16 @@
 }
 
 :root {
-  --app-bg: #f4f7fb;
+  /* Linear/Attio light — see skills/ui-design/SKILL.md */
+  --app-bg: #fafbfb;
   --app-bg-elevated: #ffffff;
   --app-surface: #ffffff;
-  --app-hover: #eef2f7;
-  --app-fg: #0f172a;
-  --app-muted: #4f5f73;
-  --app-border: #e7edf5;
+  --app-hover: #f7f8f8;
+  --app-fg: #0f1011;
+  --app-muted: #62666d;
+  --app-border: #e6e8eb;
   --app-input-bg: #ffffff;
-  --app-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  --app-shadow: none;
 
   --sidebar-bg: #0f172a;
   --sidebar-fg: #f8fafc;
@@ -64,15 +65,15 @@
 }
 
 html[data-theme='light'] {
-  --app-bg: #f4f7fb;
+  --app-bg: #fafbfb;
   --app-bg-elevated: #ffffff;
   --app-surface: #ffffff;
-  --app-hover: #eef2f7;
-  --app-fg: #0f172a;
-  --app-muted: #4f5f73;
-  --app-border: #e7edf5;
+  --app-hover: #f7f8f8;
+  --app-fg: #0f1011;
+  --app-muted: #62666d;
+  --app-border: #e6e8eb;
   --app-input-bg: #ffffff;
-  --app-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  --app-shadow: none;
 
   --sidebar-bg: #0f172a;
   --sidebar-fg: #f8fafc;
@@ -116,8 +117,9 @@ body {
   margin: 0;
   background: var(--app-bg);
   color: var(--app-fg);
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.45;
+  font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -135,7 +137,6 @@ select {
 .card-surface {
   border: 1px solid var(--app-border);
   background: var(--app-bg-elevated);
-  box-shadow: var(--app-shadow);
   overflow: hidden;
   max-width: 100%;
   width: 100%;
