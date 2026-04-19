@@ -33,7 +33,7 @@ export async function registerWorkflowRoutes(app: FastifyInstance) {
       where: { workflowKey: { in: workflows.map((w) => w.key) } },
       orderBy: { createdAt: 'desc' },
       distinct: ['workflowKey'],
-      select: { workflowKey: true, id: true, status: true, createdAt: true, durationMs: true },
+      select: { workflowKey: true, id: true, status: true, startedAt: true },
     });
     const lastRunMap = new Map(lastRuns.map((r) => [r.workflowKey, r]));
 
@@ -181,13 +181,13 @@ export async function registerWorkflowRoutes(app: FastifyInstance) {
       throw new ApiError(404, 'NOT_FOUND', 'Run not found');
     }
 
-    if (!['PENDING', 'RUNNING', 'PAUSED'].includes(run.status)) {
+    if (!['PENDING', 'RUNNING'].includes(run.status)) {
       throw new ApiError(400, 'BAD_REQUEST', `Cannot cancel a run with status: ${run.status}`);
     }
 
     await db.workflowRun.update({
       where: { id: runId },
-      data: { status: 'CANCELLED', completedAt: new Date() },
+      data: { status: 'CANCELLED', finishedAt: new Date() },
     });
 
     return { ok: true };
@@ -201,7 +201,7 @@ export async function registerWorkflowRoutes(app: FastifyInstance) {
 
     const run = await db.workflowRun.findUnique({
       where: { id: runId },
-      include: { steps: { orderBy: { createdAt: 'asc' } } },
+      include: { steps: { orderBy: { startedAt: 'asc' } } },
     });
     if (!run || run.workflowKey !== key) {
       throw new ApiError(404, 'NOT_FOUND', 'Run not found');
@@ -215,9 +215,8 @@ export async function registerWorkflowRoutes(app: FastifyInstance) {
     await scheduleJob('workflow.run', {
       workflowKey: key,
       triggerType: 'manual',
-      input: (run.input ?? {}) as Record<string, unknown>,
-      triggerPayload: (run.triggerPayload ?? {}) as Record<string, unknown>,
-      correlationId: runId, // Link retry to original run
+      input: (run.inputData ?? {}) as Record<string, unknown>,
+      correlationId: runId,
     });
 
     return { ok: true, message: 'Retry queued' };

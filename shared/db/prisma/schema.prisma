@@ -172,6 +172,7 @@ enum WorkflowRunStatus {
   RUNNING
   COMPLETED
   FAILED
+  CANCELLED
 }
 
 model WorkflowRunStep {
