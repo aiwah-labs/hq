@@ -69,7 +69,7 @@ export function ObjectForm({ schema, formFields, initialValues, action, submitLa
 
         return (
           <div key={f.name} className="flex flex-col gap-1">
-            <label htmlFor={id} className="text-[12px] font-medium text-[var(--fg)]">
+            <label htmlFor={id} className="text-[12px] font-medium text-[#0f1011]">
               {f.label}
               {f.required && <span className="ml-0.5 text-red-500">*</span>}
             </label>
@@ -80,7 +80,7 @@ export function ObjectForm({ schema, formFields, initialValues, action, submitLa
                 name={f.name}
                 defaultValue={initial}
                 required={f.required}
-                className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px]"
+                className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px]"
               >
                 {!f.required && <option value="">—</option>}
                 {f.values.map((v) => (
@@ -94,7 +94,7 @@ export function ObjectForm({ schema, formFields, initialValues, action, submitLa
                 id={id}
                 name={f.name}
                 defaultValue={initial}
-                className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px]"
+                className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px]"
               >
                 <option value="">—</option>
                 <option value="true">Yes</option>
@@ -108,7 +108,7 @@ export function ObjectForm({ schema, formFields, initialValues, action, submitLa
                 placeholder={f.placeholder}
                 required={f.required}
                 rows={5}
-                className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px]"
+                className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px]"
               />
             ) : f.type === 'json' ? (
               <textarea
@@ -117,7 +117,7 @@ export function ObjectForm({ schema, formFields, initialValues, action, submitLa
                 defaultValue={initial}
                 placeholder={f.placeholder ?? '{}'}
                 rows={4}
-                className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-mono text-[12px]"
+                className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 font-mono text-[12px]"
               />
             ) : (
               <input
@@ -127,11 +127,11 @@ export function ObjectForm({ schema, formFields, initialValues, action, submitLa
                 defaultValue={initial}
                 placeholder={f.placeholder}
                 required={f.required}
-                className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px]"
+                className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px]"
               />
             )}
 
-            {f.helpText && <p className="text-[11px] text-[var(--muted)]">{f.helpText}</p>}
+            {f.helpText && <p className="text-[11px] text-[#62666d]">{f.helpText}</p>}
           </div>
         );
       })}
@@ -140,14 +140,14 @@ export function ObjectForm({ schema, formFields, initialValues, action, submitLa
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-[13px] font-medium text-white disabled:opacity-50"
+          className="rounded-md bg-[#009E85] px-3 py-1.5 text-[13px] font-medium text-white disabled:opacity-50"
         >
           {pending ? 'Saving…' : (submitLabel ?? `Save ${schema.label}`)}
         </button>
         {cancelHref && (
           <a
             href={cancelHref}
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-[13px] font-medium text-[var(--fg)]"
+            className="rounded-md border border-[#e6e8eb] px-3 py-1.5 text-[13px] font-medium text-[#0f1011]"
           >
             Cancel
           </a>

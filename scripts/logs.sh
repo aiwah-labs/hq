@@ -2,7 +2,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # logs.sh [app] [command] [filter]
 #
-# Quick log browsing tool for aiwah-hq dev sessions.
+# Quick log browsing tool for HQ dev sessions.
 # All log files are JSON lines — agent logs are tagged with "event" field.
 #
 # Usage:

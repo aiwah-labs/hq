@@ -9,24 +9,30 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hq/actions": "workspace:*",
+    "@hq/agents": "workspace:*",
     "@hq/api-client": "workspace:*",
     "@hq/auth": "workspace:*",
     "@hq/db": "workspace:*",
+    "@hq/events": "workspace:*",
     "@hq/files": "workspace:*",
     "@hq/integrations": "workspace:*",
     "@hq/jobs": "workspace:*",
     "@hq/objects": "workspace:*",
     "@hq/services": "workspace:*",
     "@hq/storage": "workspace:*",
+    "@hq/workflows": "workspace:*",
     "lucide-react": "^0.400.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "rehype-sanitize": "^6.0.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

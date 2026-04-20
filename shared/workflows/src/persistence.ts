@@ -1,5 +1,4 @@
 import { db } from '@hq/db';
-import type { StepEval, NodeAnnotation, WorkflowRunStatus } from './types.js';
 
 // ─────────────────────────────────────────────
 // WORKFLOW RUN CRUD
@@ -7,22 +6,12 @@ import type { StepEval, NodeAnnotation, WorkflowRunStatus } from './types.js';
 
 export async function createRun(params: {
   workflowKey: string;
-  workflowVersion: number;
-  triggerType: string;
-  triggerPayload?: unknown;
-  input?: unknown;
-  parentRunId?: string;
-  correlationId?: string;
+  inputData?: unknown;
 }) {
   return db.workflowRun.create({
     data: {
       workflowKey: params.workflowKey,
-      workflowVersion: params.workflowVersion,
-      triggerType: params.triggerType,
-      triggerPayload: (params.triggerPayload ?? {}) as object,
-      input: (params.input ?? {}) as object,
-      parentRunId: params.parentRunId,
-      correlationId: params.correlationId,
+      inputData: (params.inputData ?? {}) as object,
       status: 'PENDING',
     },
   });
@@ -30,23 +19,17 @@ export async function createRun(params: {
 
 export async function updateRunStatus(
   runId: string,
-  status: WorkflowRunStatus,
-  data?: { output?: unknown; error?: string; variables?: unknown }
+  status: string,
+  data?: { error?: string }
 ) {
-  const now = new Date();
-  const run = await db.workflowRun.findUniqueOrThrow({ where: { id: runId } });
-
-  const durationMs = run.startedAt ? now.getTime() - run.startedAt.getTime() : null;
-
   return db.workflowRun.update({
     where: { id: runId },
     data: {
       status: status.toUpperCase() as any,
-      ...(status === 'running' && !run.startedAt ? { startedAt: now } : {}),
-      ...(['completed', 'failed', 'cancelled'].includes(status) ? { completedAt: now, durationMs } : {}),
-      ...(data?.output !== undefined ? { output: data.output as object } : {}),
+      ...(['COMPLETED', 'FAILED', 'CANCELLED'].includes(status.toUpperCase())
+        ? { finishedAt: new Date() }
+        : {}),
       ...(data?.error !== undefined ? { error: data.error } : {}),
-      ...(data?.variables !== undefined ? { variables: data.variables as object } : {}),
     },
   });
 }
@@ -55,8 +38,7 @@ export async function getRun(runId: string) {
   return db.workflowRun.findUnique({
     where: { id: runId },
     include: {
-      steps: { orderBy: { createdAt: 'asc' } },
-      childRuns: { orderBy: { createdAt: 'asc' } },
+      steps: { orderBy: { startedAt: 'asc' } },
     },
   });
 }
@@ -72,12 +54,10 @@ export async function listRuns(
       workflowKey,
       ...(options?.status ? { status: options.status.toUpperCase() as any } : {}),
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { startedAt: 'desc' },
     take: limit + 1,
     ...(options?.cursor ? { cursor: { id: options.cursor }, skip: 1 } : {}),
-    include: {
-      _count: { select: { steps: true } },
-    },
+    include: { _count: { select: { steps: true } } },
   });
 
   const hasMore = runs.length > limit;
@@ -90,74 +70,51 @@ export async function listRuns(
 }
 
 // ─────────────────────────────────────────────
-// STEP LOG CRUD
+// STEP CRUD
 // ─────────────────────────────────────────────
 
-export async function createStepLog(params: {
+export async function createStep(params: {
   runId: string;
   nodeId: string;
-  nodeType: string;
-  annotation: NodeAnnotation;
-  attempt?: number;
+  inputData?: unknown;
 }) {
-  return db.workflowStepLog.create({
+  return db.workflowRunStep.create({
     data: {
       runId: params.runId,
       nodeId: params.nodeId,
-      nodeType: params.nodeType,
-      annotation: params.annotation as object,
-      attempt: params.attempt ?? 1,
       status: 'RUNNING',
+      inputData: (params.inputData ?? null) as object,
       startedAt: new Date(),
     },
   });
 }
 
-export async function updateStepLog(
-  stepLogId: string,
+export async function updateStep(
+  stepId: string,
   data: {
-    status: 'COMPLETED' | 'FAILED' | 'SKIPPED';
-    output?: unknown;
+    status: 'COMPLETED' | 'FAILED';
+    outputData?: unknown;
     error?: string;
-    evals?: StepEval[];
-    metadata?: Record<string, unknown>;
   }
 ) {
-  const now = new Date();
-  const step = await db.workflowStepLog.findUniqueOrThrow({ where: { id: stepLogId } });
-
-  const durationMs = step.startedAt ? now.getTime() - step.startedAt.getTime() : null;
-
-  return db.workflowStepLog.update({
-    where: { id: stepLogId },
+  return db.workflowRunStep.update({
+    where: { id: stepId },
     data: {
       status: data.status,
-      completedAt: now,
-      durationMs,
-      ...(data.output !== undefined ? { output: data.output as object } : {}),
+      finishedAt: new Date(),
+      ...(data.outputData !== undefined ? { outputData: data.outputData as object } : {}),
       ...(data.error !== undefined ? { error: data.error } : {}),
-      ...(data.evals ? { evals: data.evals as object[] } : {}),
-      ...(data.metadata ? { metadata: data.metadata as object } : {}),
     },
   });
 }
 
-export async function updateStepInput(stepLogId: string, input: unknown) {
-  return db.workflowStepLog.update({
-    where: { id: stepLogId },
-    data: { input: input as object },
-  });
-}
-
-export async function getStepLog(stepLogId: string) {
-  return db.workflowStepLog.findUnique({
-    where: { id: stepLogId },
-  });
+export async function getStepLog(stepId: string) {
+  return db.workflowRunStep.findUnique({ where: { id: stepId } });
 }
 
 export async function listStepLogs(runId: string) {
-  return db.workflowStepLog.findMany({
+  return db.workflowRunStep.findMany({
     where: { runId },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { startedAt: 'asc' },
   });
 }

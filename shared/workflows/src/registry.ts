@@ -80,7 +80,7 @@ export function getWorkflows(): WorkflowDefinition[] {
 export interface SerializedNodeDef {
   id: string;
   type: string;
-  annotation: { label: string; description?: string };
+  annotation: { label: string; description?: string; icon?: string; color?: string; category?: string };
   actionName?: string;
   inputMap?: Record<string, string>;
   agentKey?: string;

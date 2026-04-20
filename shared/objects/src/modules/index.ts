@@ -10,9 +10,7 @@
  */
 import type { ObjectDefinition } from '../types.js';
 import { crmObjects } from './crm.js';
-import { projectsTasksObjects } from './projects-tasks.js';
 
 export const moduleObjects: Record<string, ObjectDefinition> = {
   ...crmObjects,
-  ...projectsTasksObjects,
 };

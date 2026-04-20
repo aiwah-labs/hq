@@ -26,10 +26,8 @@ export function getApiBaseUrl(): string {
     if (window.location.port === '4002') return `http://${host}:4003`;
     // If dev server (3002), API is 3003
     if (window.location.port === '3002') return `http://${host}:3003`;
-    
-    // Prod domains: api.aiwahlabs.com
-    if (host.includes('aiwahlabs.com')) return 'https://api.aiwahlabs.com';
 
+    // Prod: set NEXT_PUBLIC_API_BASE_URL at build time to your deployed API.
     return `http://${host}:3003`;
   }
   return process.env.API_BASE_URL ?? 'http://localhost:3003';

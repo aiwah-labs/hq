@@ -28,25 +28,25 @@ export default async function ObjectNewPage({ params }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col" data-testid={`object-new-${type}`}>
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-        <div>
-          <h1 className="text-[18px] font-semibold text-[var(--fg)]">
-            New {schema.label}
-          </h1>
-          <p className="mt-0.5 text-[13px] text-[var(--muted)]">
-            Create a new {schema.label.toLowerCase()} record.
-          </p>
+    <div className="space-y-4" data-testid={`object-new-${type}`}>
+      {/* Header */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <span className="font-medium">Home</span>
+          <span className="text-[#d0d6e0]">/</span>
+          <Link href={`/objects/${type}`} className="hover:text-[#0f1011] transition-colors">{schema.pluralLabel}</Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <span>New</span>
         </div>
-        <Link
-          href={`/objects/${type}`}
-          className="text-[13px] text-[var(--muted)] hover:text-[var(--fg)]"
-        >
-          ← Back to {schema.pluralLabel}
-        </Link>
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">
+          New {schema.label}
+        </h1>
+        <p className="mt-2 text-[12.5px] text-[#62666d]">
+          Create a new {schema.label.toLowerCase()} record.
+        </p>
       </div>
 
-      <div className="max-w-xl p-6">
+      <div className="max-w-xl">
         <ObjectForm
           schema={schema}
           formFields={formFields}

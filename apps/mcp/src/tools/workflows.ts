@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { AiwahApiClient } from '@hq/api-client';
+import type { HQApiClient } from '@hq/api-client';
 import { asText, toMcpError } from '../util.js';
 
-export function registerWorkflowTools(server: McpServer, client: AiwahApiClient): void {
+export function registerWorkflowTools(server: McpServer, client: HQApiClient): void {
   server.tool('workflow.list', 'List all registered workflow definitions with recent run stats', {}, async () => {
     try {
       return { content: [{ type: 'text', text: asText(await client.listWorkflows()) }] };

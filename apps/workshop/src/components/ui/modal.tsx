@@ -62,18 +62,18 @@ export function Modal({ trigger, title, children, open: controlledOpen, onOpenCh
           {/* Dialog — full screen on mobile, centered card on desktop */}
           <div
             className={cn(
-              'relative z-10 flex max-w-full flex-col overflow-hidden bg-[var(--app-bg-elevated)]',
+              'relative z-10 flex max-w-full flex-col overflow-hidden bg-[#ffffff]',
               'h-full w-full',
-              'sm:mt-[10vh] sm:h-auto sm:max-h-[80vh] sm:w-full sm:max-w-lg sm:rounded-[12px] sm:border sm:border-[var(--app-border)] sm:shadow-lg'
+              'sm:mt-[10vh] sm:h-auto sm:max-h-[80vh] sm:w-full sm:max-w-lg sm:rounded-[12px] sm:border sm:border-[#e6e8eb] sm:shadow-lg'
             )}
           >
             {/* Header */}
-            <div className="flex shrink-0 items-center justify-between border-b border-[var(--app-border)] px-4 py-3 sm:px-5">
-              <h2 className="min-w-0 flex-1 truncate font-display text-[16px] font-semibold tracking-tight sm:text-[18px]">{title}</h2>
+            <div className="flex shrink-0 items-center justify-between border-b border-[#e6e8eb] px-4 py-3 sm:px-5">
+              <h2 className="min-w-0 flex-1 truncate text-[16px] font-semibold tracking-tight sm:text-[18px]">{title}</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] text-[var(--app-muted)] transition-colors hover:bg-[var(--app-bg)] hover:text-[var(--app-fg)]"
+                className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] text-[#62666d] transition-colors hover:bg-[var(--app-bg)] hover:text-[#0f1011]"
                 aria-label="Close"
               >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -70,7 +70,7 @@ export function ImportForm({ type, label }: Props) {
   return (
     <div className="flex flex-col gap-4" data-testid="object-import-form">
       <div className="flex flex-col gap-2">
-        <label className="text-[13px] font-medium text-[var(--app-fg)]">
+        <label className="text-[13px] font-medium text-[#0f1011]">
           Upload a file
         </label>
         <input
@@ -84,7 +84,7 @@ export function ImportForm({ type, label }: Props) {
 
       <div className="flex gap-3">
         <div className="w-32">
-          <label className="text-[13px] font-medium text-[var(--app-fg)]">Format</label>
+          <label className="text-[13px] font-medium text-[#0f1011]">Format</label>
           <Select value={format} onChange={(e) => setFormat(e.target.value as 'csv' | 'json')}>
             <option value="csv">CSV</option>
             <option value="json">JSON</option>
@@ -93,7 +93,7 @@ export function ImportForm({ type, label }: Props) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-[13px] font-medium text-[var(--app-fg)]">
+        <label className="text-[13px] font-medium text-[#0f1011]">
           Or paste content
         </label>
         <Textarea
@@ -147,7 +147,7 @@ export function ImportForm({ type, label }: Props) {
           )}
 
           <div>
-            <p className="mb-1 text-[12px] text-[var(--app-muted)]">
+            <p className="mb-1 text-[12px] text-[#62666d]">
               Mapping: {Object.keys(preview.fieldMap).length === 0
                 ? '(no source fields match)'
                 : Object.entries(preview.fieldMap).map(([s, t]) => `${s} → ${t}`).join(', ')}
@@ -167,13 +167,13 @@ export function ImportForm({ type, label }: Props) {
                 <tbody>
                   {preview.sampleRows.slice(0, SAMPLE_LIMIT * 4).map((row) => (
                     <tr key={row.row} className="border-b border-divider/50 align-top">
-                      <td className="py-1.5 pr-2 text-[var(--app-muted)]">{row.row}</td>
+                      <td className="py-1.5 pr-2 text-[#62666d]">{row.row}</td>
                       <td className="py-1.5 pr-2 font-mono">
                         {JSON.stringify(row.data)}
                       </td>
                       <td className="py-1.5 pr-2">
                         {row.errors.length === 0 ? (
-                          <span className="text-[var(--app-muted)]">—</span>
+                          <span className="text-[#62666d]">—</span>
                         ) : (
                           <ul className="text-red-600">
                             {row.errors.map((e, i) => (

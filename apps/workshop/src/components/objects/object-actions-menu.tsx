@@ -31,7 +31,7 @@ export function ObjectActionsMenu({ schema, id, deleteAction }: Props) {
     <div className="flex items-center gap-2">
       <a
         href={`/objects/${schema.type}/${id}/edit`}
-        className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px] font-medium"
+        className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px] font-medium"
       >
         Edit
       </a>

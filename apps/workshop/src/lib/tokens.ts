@@ -1,6 +1,7 @@
-// Aiwah Workshop design tokens.
-// Follows the ui-design skill (Linear/Attio "tool look") with Aiwah teal as
-// the single brand accent. See skills/ui-design/SKILL.md.
+// Workshop design tokens.
+// Follows the ui-design skill (Linear/Attio "tool look") with a single brand
+// primary colour as the only accent. See skills/ui-design/SKILL.md.
+// CUSTOMIZE: swap `colors.primary.*` below to your brand hue.
 
 export const tokens = {
   colors: {

@@ -14,5 +14,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/workshop/:path*', '/dashboard/:path*', '/bots/:path*', '/users/:path*', '/settings/:path*'],
+  // Protect everything except login, SSO callbacks, Next.js internals, and static assets
+  matcher: ['/((?!login|_next/static|_next/image|favicon\\.ico).*)'],
 };

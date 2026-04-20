@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardBody, CardHeader } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import { requirePermission } from '@/lib/auth';
 import { ROUTE_PERMISSIONS } from '@/lib/access';
 import { getSessionApiClient } from '@/lib/api-client';
@@ -64,13 +64,11 @@ export default async function WorkflowRunDetailPage({
 
   if (!run) {
     return (
-      <div className="flex h-full min-h-0 flex-col">
-        <main className="pt-4">
-          <Link href={`/workflows/${encodeURIComponent(key)}`} className="mb-2 inline-flex items-center gap-1 text-[12px] text-muted hover:text-foreground">
-            <ArrowLeft className="h-3 w-3" /> Back
-          </Link>
-          <p className="text-[13px] text-muted">Run not found.</p>
-        </main>
+      <div className="space-y-4">
+        <Link href={`/workflows/${encodeURIComponent(key)}`} className="inline-flex items-center gap-1 text-[12px] text-[#62666d] hover:text-[#0f1011]">
+          <ArrowLeft className="h-3 w-3" /> Back
+        </Link>
+        <p className="text-[13px] text-[#62666d]">Run not found.</p>
       </div>
     );
   }
@@ -96,115 +94,116 @@ export default async function WorkflowRunDetailPage({
   }));
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <main className="space-y-5 pt-4">
-        {/* Header */}
-        <div>
+    <div className="space-y-4">
+      {/* Header */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <Link href="/workflows" className="font-medium hover:text-[#0f1011] transition-colors">Workflows</Link>
+          <span className="text-[#d0d6e0]">/</span>
           <Link
             href={`/workflows/${encodeURIComponent(key)}`}
-            className="mb-2 inline-flex items-center gap-1 text-[12px] text-muted hover:text-foreground"
+            className="hover:text-[#0f1011] transition-colors"
             data-testid="link-back-workflow"
           >
-            <ArrowLeft className="h-3 w-3" /> {definition?.name ?? key}
+            {definition?.name ?? key}
           </Link>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="font-display text-[18px] font-semibold tracking-tight @sm:text-[22px]" data-testid="run-title">
-                  Run
-                </h1>
-                <code className="text-[13px] text-muted font-mono">{run.id.slice(0, 16)}</code>
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                <Badge tone={statusTone(run.status)} data-testid="badge-run-status">
-                  {statusIcon(run.status)} {run.status}
-                </Badge>
-                <span className="text-[12px] text-muted">
-                  {formatTimestamp(run.startedAt)} · {formatDuration(run.durationMs)} · v{run.workflowVersion}
-                </span>
-              </div>
+          <span className="text-[#d0d6e0]">/</span>
+          <span>Run</span>
+        </div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]" data-testid="run-title">
+                Run
+              </h1>
+              <code className="font-mono text-[13px] text-[#8a8f98]">{run.id.slice(0, 16)}</code>
             </div>
-            <div className="flex gap-2 shrink-0">
-              {canCancel && (
-                <form action={cancelRunAction.bind(null, key, runId)}>
-                  <Button variant="ghost" size="sm" type="submit" data-testid="btn-cancel-run" aria-label="Cancel run">
-                    <Ban className="h-3.5 w-3.5" /> Cancel
-                  </Button>
-                </form>
-              )}
-              {canRetry && (
-                <form action={retryRunAction.bind(null, key, runId)}>
-                  <Button variant="secondary" size="sm" type="submit" data-testid="btn-retry-run" aria-label="Retry run">
-                    <RotateCcw className="h-3.5 w-3.5" /> Retry
-                  </Button>
-                </form>
-              )}
+            <div className="mt-2 flex items-center gap-2">
+              <Badge tone={statusTone(run.status)} data-testid="badge-run-status">
+                {statusIcon(run.status)} {run.status}
+              </Badge>
+              <span className="text-[12px] text-[#62666d]">
+                {formatTimestamp(run.startedAt)} · {formatDuration(run.durationMs)} · v{run.workflowVersion}
+              </span>
             </div>
           </div>
+          <div className="flex gap-2 shrink-0">
+            {canCancel && (
+              <form action={cancelRunAction.bind(null, key, runId)}>
+                <Button variant="ghost" size="sm" type="submit" data-testid="btn-cancel-run" aria-label="Cancel run">
+                  <Ban className="h-3.5 w-3.5" /> Cancel
+                </Button>
+              </form>
+            )}
+            {canRetry && (
+              <form action={retryRunAction.bind(null, key, runId)}>
+                <Button variant="secondary" size="sm" type="submit" data-testid="btn-retry-run" aria-label="Retry run">
+                  <RotateCcw className="h-3.5 w-3.5" /> Retry
+                </Button>
+              </form>
+            )}
+          </div>
         </div>
+      </div>
 
-        {/* Metrics */}
-        <div className="grid gap-3 grid-cols-2 @sm:grid-cols-4">
-          <MetricCard label="Steps" value={steps.length} sub={`${completedSteps} passed`} />
-          <MetricCard label="Failed" value={failedSteps} />
-          <MetricCard label="Duration" value={formatDuration(run.durationMs)} />
-          <MetricCard label="Trigger" value={run.triggerType} />
+      {/* Metrics — stat row */}
+      <div className="flex items-stretch overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+        {[
+          { label: 'Steps', value: steps.length, sub: `${completedSteps} passed` },
+          { label: 'Failed', value: failedSteps },
+          { label: 'Duration', value: formatDuration(run.durationMs) },
+          { label: 'Trigger', value: run.triggerType },
+        ].map((m, i) => (
+          <div key={m.label} className={`flex-1 px-4 py-3${i > 0 ? ' border-l border-[#e6e8eb]' : ''}`}>
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">{m.label}</p>
+            <p className="mt-1 text-[18px] font-semibold leading-none tabular-nums tracking-tight text-[#0f1011]">{m.value}</p>
+            {m.sub && <p className="mt-0.5 text-[11px] text-[#8a8f98]">{m.sub}</p>}
+          </div>
+        ))}
+      </div>
+
+      {/* Flow + NDV panel */}
+      {definition && (
+        <RunDetailClient
+          definition={definition}
+          stepExecutions={stepExecutions}
+          workflowKey={key}
+          workflowName={definition.name}
+          allRuns={allRuns}
+          activeRunId={runId}
+        />
+      )}
+
+      {/* Run-level I/O */}
+      <div className="grid gap-4 @lg:grid-cols-2">
+        <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+          <div className="border-b border-[#e6e8eb] px-4 py-2.5">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Run Input</h2>
+          </div>
+          <div className="p-3">
+            <pre className="max-h-[180px] overflow-auto font-mono text-[11px] leading-relaxed text-[#62666d]">
+              {JSON.stringify(run.input, null, 2)}
+            </pre>
+          </div>
         </div>
-
-        {/* Flow + NDV panel — client component manages node selection state */}
-        {definition && (
-          <RunDetailClient
-            definition={definition}
-            stepExecutions={stepExecutions}
-            workflowKey={key}
-            workflowName={definition.name}
-            allRuns={allRuns}
-            activeRunId={runId}
-          />
-        )}
-
-        {/* Run-level I/O */}
-        <div className="grid gap-4 @lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <h2 className="text-[14px] font-semibold">Run Input</h2>
-            </CardHeader>
-            <CardBody className="pt-0">
-              <pre className="max-h-[180px] overflow-auto rounded-md bg-[var(--app-input-bg)] p-3 font-mono text-[11px] leading-relaxed text-muted">
-                {JSON.stringify(run.input, null, 2)}
+        <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+          <div className="border-b border-[#e6e8eb] px-4 py-2.5">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Run Output</h2>
+          </div>
+          <div className="p-3">
+            {run.error ? (
+              <div className="rounded-md bg-red-500/10 p-3 text-[12px] text-red-400" data-testid="run-error">
+                {run.error}
+              </div>
+            ) : (
+              <pre className="max-h-[180px] overflow-auto font-mono text-[11px] leading-relaxed text-[#62666d]">
+                {run.output ? JSON.stringify(run.output, null, 2) : 'null'}
               </pre>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardHeader>
-              <h2 className="text-[14px] font-semibold">Run Output</h2>
-            </CardHeader>
-            <CardBody className="pt-0">
-              {run.error ? (
-                <div className="rounded-md bg-red-500/10 p-3 text-[12px] text-red-400 dark:text-red-300" data-testid="run-error">
-                  {run.error}
-                </div>
-              ) : (
-                <pre className="max-h-[180px] overflow-auto rounded-md bg-[var(--app-input-bg)] p-3 font-mono text-[11px] leading-relaxed text-muted">
-                  {run.output ? JSON.stringify(run.output, null, 2) : 'null'}
-                </pre>
-              )}
-            </CardBody>
-          </Card>
+            )}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
 
-function MetricCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <Card>
-      <CardBody className="p-3 space-y-1">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</p>
-        <p className="text-[22px] font-semibold tracking-tight">{value}</p>
-        {sub && <p className="text-[11px] text-muted">{sub}</p>}
-      </CardBody>
-    </Card>
-  );
-}

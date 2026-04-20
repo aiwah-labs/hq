@@ -2,8 +2,8 @@
 
 ## Prerequisites
 - Ubuntu/Debian VPS
-- DNS record for `workshop.aiwahlabs.com`
-- Repo cloned to `/var/www/aiwah-hq`
+- DNS record for `workshop.example.com`
+- Repo cloned to `/var/www/hq`
 
 ## First-time setup
 1. Copy environment values:
@@ -17,7 +17,7 @@ bash apps/workshop/deploy/setup.sh
 ```
 4. Issue TLS certificate:
 ```bash
-sudo certbot --nginx -d workshop.aiwahlabs.com
+sudo certbot --nginx -d workshop.example.com
 ```
 
 ## Regular deploy
@@ -64,10 +64,10 @@ shell without manually exporting `DATABASE_URL` or related vars.
 ```bash
 brew install postgresql@16
 brew services start postgresql@16
-createuser aiwah || true
-createdb aiwah_dev -O aiwah || true
-psql -d postgres -c "ALTER USER aiwah WITH PASSWORD 'aiwah_dev';"
-export DATABASE_URL="postgresql://aiwah:aiwah_dev@localhost:5432/aiwah_dev?schema=public"
+createuser hq || true
+createdb hq_dev -O hq || true
+psql -d postgres -c "ALTER USER hq WITH PASSWORD 'hq_dev';"
+export DATABASE_URL="postgresql://hq:hq_dev@localhost:5432/hq_dev?schema=public"
 export SUPERADMIN_EMAIL_ALLOWLIST="admin@example.com"
 export SEED_EMAIL="admin@example.com"
 export SEED_PASSWORD="changeme"
@@ -81,9 +81,9 @@ pnpm dev:platform
 ```bash
 sudo apt-get install -y postgresql postgresql-contrib
 sudo systemctl start postgresql
-sudo -u postgres psql -c "CREATE ROLE aiwah LOGIN PASSWORD 'aiwah_dev';" || true
-sudo -u postgres psql -c "CREATE DATABASE aiwah_dev OWNER aiwah;" || true
-export DATABASE_URL="postgresql://aiwah:aiwah_dev@localhost:5432/aiwah_dev?schema=public"
+sudo -u postgres psql -c "CREATE ROLE hq LOGIN PASSWORD 'hq_dev';" || true
+sudo -u postgres psql -c "CREATE DATABASE hq_dev OWNER hq;" || true
+export DATABASE_URL="postgresql://hq:hq_dev@localhost:5432/hq_dev?schema=public"
 export SUPERADMIN_EMAIL_ALLOWLIST="admin@example.com"
 export SEED_EMAIL="admin@example.com"
 export SEED_PASSWORD="changeme"
@@ -102,5 +102,5 @@ Stop local DB when idle:
 git checkout <last-known-good-tag-or-sha>
 pnpm install --frozen-lockfile
 pnpm --filter @hq/workshop build
-pm2 reload aiwah-workshop
+pm2 reload hq-workshop
 ```

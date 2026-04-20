@@ -29,17 +29,17 @@ export function ObjectDetail({ schema, detailFields, record }: Props) {
   return (
     <div className="flex flex-col gap-6" data-testid={`object-detail-${schema.type}`}>
       {Object.entries(grouped).map(([section, fields]) => (
-        <section key={section} className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-4">
-          <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+        <section key={section} className="rounded-md border border-[#e6e8eb] bg-[#ffffff] p-4">
+          <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-[#62666d]">
             {section}
           </h3>
           <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
             {fields.map((f) => (
               <div key={f.name}>
-                <dt className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-[#62666d]">
                   {f.label}
                 </dt>
-                <dd className="mt-0.5 text-[13px] text-[var(--fg)]">
+                <dd className="mt-0.5 text-[13px] text-[#0f1011]">
                   <ObjectFieldValue field={f} value={valueOf(record, f)} />
                 </dd>
               </div>

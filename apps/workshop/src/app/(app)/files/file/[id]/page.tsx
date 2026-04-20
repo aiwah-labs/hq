@@ -71,118 +71,105 @@ export default async function FileDetailPage({ params }: PageProps) {
   const previewSrc = downloadUrl ?? apiDownloadUrl;
 
   return (
-    <div data-testid="file-detail" data-file-id={file.id} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <header>
-        <nav aria-label="Breadcrumb" data-testid="breadcrumb" style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>
-          <Link href="/files" style={{ color: '#6b7280', textDecoration: 'none' }}>Files</Link>
-          {' / '}
-          <Link href={`/files/f/${folder.id}`} style={{ color: '#6b7280', textDecoration: 'none' }}>
-            {folder.name}
-          </Link>
-          {' / '}
+    <div className="space-y-4" data-testid="file-detail" data-file-id={file.id}>
+      {/* Header */}
+      <div>
+        <nav aria-label="Breadcrumb" data-testid="breadcrumb" className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <Link href="/files" className="font-medium hover:text-[#0f1011] transition-colors">Files</Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <Link href={`/files/f/${folder.id}`} className="hover:text-[#0f1011] transition-colors">{folder.name}</Link>
+          <span className="text-[#d0d6e0]">/</span>
           <span>{file.name}</span>
         </nav>
-        <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0 }}>{file.name}</h1>
-        <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 13 }}>
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">{file.name}</h1>
+        <p className="mt-2 text-[12.5px] text-[#62666d]">
           {file.mime ?? 'unknown type'} · {formatBytes(file.size)} · {file.uploadStatus}
         </p>
-      </header>
+      </div>
 
-      <section aria-labelledby="preview-heading">
-        <h2 id="preview-heading" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6, color: '#6b7280', margin: '0 0 12px' }}>
-          Preview
-        </h2>
-        {file.uploadStatus !== 'COMPLETE' ? (
-          <p data-testid="preview-pending" style={{ color: '#6b7280', fontSize: 13 }}>
-            Upload is still {file.uploadStatus.toLowerCase()}. No preview available yet.
-          </p>
-        ) : kind === 'image' ? (
-          <img
-            data-testid="preview-image"
-            src={previewSrc}
-            alt={file.name}
-            style={{ maxWidth: '100%', maxHeight: 600, borderRadius: 6, border: '1px solid #e5e7eb' }}
-          />
-        ) : kind === 'pdf' ? (
-          <iframe
-            data-testid="preview-pdf"
-            src={previewSrc}
-            title={file.name}
-            style={{ width: '100%', height: 600, borderRadius: 6, border: '1px solid #e5e7eb' }}
-          />
-        ) : kind === 'video' ? (
-          <video
-            data-testid="preview-video"
-            src={previewSrc}
-            controls
-            style={{ maxWidth: '100%', maxHeight: 600, borderRadius: 6, border: '1px solid #e5e7eb' }}
-          />
-        ) : kind === 'audio' ? (
-          <audio data-testid="preview-audio" src={previewSrc} controls style={{ width: '100%' }} />
-        ) : kind === 'text' && textPreview !== null ? (
-          <pre
-            data-testid="preview-text"
-            style={{
-              padding: 12,
-              borderRadius: 6,
-              border: '1px solid #e5e7eb',
-              background: '#f9fafb',
-              fontSize: 12,
-              lineHeight: 1.5,
-              maxHeight: 600,
-              overflow: 'auto',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-            }}
-          >
-            {textPreview}
-          </pre>
-        ) : (
-          <p data-testid="preview-none" style={{ color: '#6b7280', fontSize: 13 }}>
-            No inline preview for this file type.{' '}
-            <a href={previewSrc} style={{ color: '#2563eb' }}>
-              Download to inspect
-            </a>
-            .
-          </p>
-        )}
-        <div style={{ marginTop: 12 }}>
-          <a
-            data-testid="download-link"
-            href={previewSrc}
-            style={{ fontSize: 13, color: '#2563eb' }}
-          >
-            Download original
-          </a>
+      {/* Preview */}
+      <div>
+        <div className="mb-2.5">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Preview</h2>
         </div>
-      </section>
+        <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white p-4" data-testid="preview-section">
+          {file.uploadStatus !== 'COMPLETE' ? (
+            <p data-testid="preview-pending" className="text-[13px] text-[#62666d]">
+              Upload is still {file.uploadStatus.toLowerCase()}. No preview available yet.
+            </p>
+          ) : kind === 'image' ? (
+            <img
+              data-testid="preview-image"
+              src={previewSrc}
+              alt={file.name}
+              className="max-h-[600px] max-w-full rounded-md border border-[#e6e8eb]"
+            />
+          ) : kind === 'pdf' ? (
+            <iframe
+              data-testid="preview-pdf"
+              src={previewSrc}
+              title={file.name}
+              className="h-[600px] w-full rounded-md border border-[#e6e8eb]"
+            />
+          ) : kind === 'video' ? (
+            <video
+              data-testid="preview-video"
+              src={previewSrc}
+              controls
+              className="max-h-[600px] max-w-full rounded-md border border-[#e6e8eb]"
+            />
+          ) : kind === 'audio' ? (
+            <audio data-testid="preview-audio" src={previewSrc} controls className="w-full" />
+          ) : kind === 'text' && textPreview !== null ? (
+            <pre
+              data-testid="preview-text"
+              className="max-h-[600px] overflow-auto rounded-md border border-[#e6e8eb] bg-[#fafbfb] p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words"
+            >
+              {textPreview}
+            </pre>
+          ) : (
+            <p data-testid="preview-none" className="text-[13px] text-[#62666d]">
+              No inline preview for this file type.{' '}
+              <a href={previewSrc} className="text-[#009E85] hover:underline">Download to inspect</a>.
+            </p>
+          )}
+          <div className="mt-3">
+            <a data-testid="download-link" href={previewSrc} className="text-[13px] text-[#009E85] hover:underline">
+              Download original
+            </a>
+          </div>
+        </div>
+      </div>
 
-      <section aria-labelledby="metadata-heading">
-        <h2 id="metadata-heading" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6, color: '#6b7280', margin: '0 0 12px' }}>
-          Metadata
-        </h2>
-        <dl data-testid="metadata-list" style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '4px 16px', fontSize: 13, margin: 0 }}>
-          <dt style={{ color: '#6b7280' }}>ID</dt>
-          <dd style={{ margin: 0, fontFamily: 'ui-monospace, monospace' }}>{file.id}</dd>
-          <dt style={{ color: '#6b7280' }}>Folder</dt>
-          <dd style={{ margin: 0 }}>
-            <Link href={`/files/f/${folder.id}`} style={{ color: '#111827' }}>{folder.path}</Link>
-          </dd>
-          <dt style={{ color: '#6b7280' }}>Checksum</dt>
-          <dd style={{ margin: 0, fontFamily: 'ui-monospace, monospace' }}>{file.checksum ?? '—'}</dd>
-          <dt style={{ color: '#6b7280' }}>Index status</dt>
-          <dd style={{ margin: 0 }}>{file.indexStatus}</dd>
-          <dt style={{ color: '#6b7280' }}>Tags</dt>
-          <dd style={{ margin: 0 }}>
-            {file.tags.length > 0 ? file.tags.join(', ') : <span style={{ color: '#6b7280' }}>—</span>}
-          </dd>
-        </dl>
-        {file.description && (
-          <p style={{ marginTop: 12, fontSize: 13, lineHeight: 1.5 }} data-testid="file-description">
-            {file.description}
-          </p>
-        )}
-      </section>
+      {/* Metadata */}
+      <div>
+        <div className="mb-2.5">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Metadata</h2>
+        </div>
+        <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white p-4">
+          <dl data-testid="metadata-list" className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2">
+            <dt className="text-[11px] font-medium text-[#8a8f98]">ID</dt>
+            <dd className="font-mono text-[11px] text-[#0f1011]">{file.id}</dd>
+            <dt className="text-[11px] font-medium text-[#8a8f98]">Folder</dt>
+            <dd className="text-[12.5px]">
+              <Link href={`/files/f/${folder.id}`} className="text-[#009E85] hover:underline">{folder.path}</Link>
+            </dd>
+            <dt className="text-[11px] font-medium text-[#8a8f98]">Checksum</dt>
+            <dd className="font-mono text-[11px] text-[#0f1011]">{file.checksum ?? '—'}</dd>
+            <dt className="text-[11px] font-medium text-[#8a8f98]">Index status</dt>
+            <dd className="text-[12.5px] text-[#0f1011]">{file.indexStatus}</dd>
+            <dt className="text-[11px] font-medium text-[#8a8f98]">Tags</dt>
+            <dd className="text-[12.5px] text-[#0f1011]">
+              {file.tags.length > 0 ? file.tags.join(', ') : <span className="text-[#8a8f98]">—</span>}
+            </dd>
+          </dl>
+          {file.description && (
+            <p className="mt-3 text-[13px] leading-relaxed text-[#62666d]" data-testid="file-description">
+              {file.description}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

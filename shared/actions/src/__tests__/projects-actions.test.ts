@@ -37,6 +37,9 @@ function mkCtx(dbOverrides: Record<string, unknown> = {}) {
       user: {
         findUniqueOrThrow: vi.fn(),
       },
+      inboxItem: {
+        create: vi.fn(),
+      },
       ...dbOverrides,
     },
     principal: { type: 'user', id: 'u1' },
@@ -228,7 +231,11 @@ describe('task.assign', () => {
     expect(action.scopes).toContain('task.write');
     const ctx = mkCtx();
     ctx.db.user.findUniqueOrThrow.mockResolvedValue({ id: 'u2' });
-    ctx.db.task.update.mockResolvedValue({ id: 't1', assigneeUserId: 'u2' });
+    ctx.db.task.update.mockResolvedValue({
+      id: 't1', title: 'Test Task', assigneeUserId: 'u2',
+      project: { id: 'p1', name: 'Test Project' },
+    });
+    ctx.db.inboxItem.create.mockResolvedValue({});
 
     const out: any = await action.handler({ taskId: 't1', assigneeUserId: 'u2' }, ctx);
 
@@ -236,6 +243,7 @@ describe('task.assign', () => {
     expect(ctx.db.task.update).toHaveBeenCalledWith({
       where: { id: 't1' },
       data: { assigneeUserId: 'u2' },
+      include: { project: { select: { id: true, name: true } } },
     });
     expect(out.assigneeUserId).toBe('u2');
   });
@@ -243,12 +251,13 @@ describe('task.assign', () => {
   it('accepts null to clear the assignee', async () => {
     const action = actionRegistry.get('task.assign')!;
     const ctx = mkCtx();
-    ctx.db.task.update.mockResolvedValue({ id: 't1', assigneeUserId: null });
+    ctx.db.task.update.mockResolvedValue({ id: 't1', assigneeUserId: null, project: { id: 'p1', name: 'Test Project' } });
     await action.handler({ taskId: 't1', assigneeUserId: null }, ctx);
     expect(ctx.db.user.findUniqueOrThrow).not.toHaveBeenCalled();
     expect(ctx.db.task.update).toHaveBeenCalledWith({
       where: { id: 't1' },
       data: { assigneeUserId: null },
+      include: { project: { select: { id: true, name: true } } },
     });
   });
 });

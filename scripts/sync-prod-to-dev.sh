@@ -6,25 +6,25 @@ OS_NAME="$(uname -s)"
 
 POSTGRES_FORMULA="${POSTGRES_FORMULA:-postgresql@16}"
 
-PROD_SSH_HOST="${AIWAH_PROD_SSH_HOST:-your-server-ip}"
-PROD_POSTGRES_CONTAINER="${AIWAH_PROD_POSTGRES_CONTAINER:-hq-postgres-prod}"
+PROD_SSH_HOST="${HQ_PROD_SSH_HOST:-your-server-ip}"
+PROD_POSTGRES_CONTAINER="${HQ_PROD_POSTGRES_CONTAINER:-hq-postgres-prod}"
 
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
-DB_NAME="${DB_NAME:-aiwah_dev}"
-DB_USER="${DB_USER:-aiwah}"
-DB_PASSWORD="${DB_PASSWORD:-aiwah_dev}"
+DB_NAME="${DB_NAME:-hq_dev}"
+DB_USER="${DB_USER:-hq}"
+DB_PASSWORD="${DB_PASSWORD:-hq_dev}"
 DB_SCHEMA="${DB_SCHEMA:-public}"
 
 SEED_EMAIL="${SEED_EMAIL:-admin@example.com}"
 SEED_PASSWORD="${SEED_PASSWORD:-changeme}"
 SUPERADMIN_EMAIL_ALLOWLIST="${SUPERADMIN_EMAIL_ALLOWLIST:-admin@example.com}"
 
-SYNC_DIR="${AIWAH_DB_SYNC_DIR:-${ROOT_DIR}/.cache/db-sync}"
-KEEP_DUMP="${AIWAH_DB_SYNC_KEEP_DUMP:-0}"
-BACKUP_LOCAL="${AIWAH_DB_SYNC_BACKUP_LOCAL:-1}"
-APPLY_LOCAL_MIGRATIONS="${AIWAH_DB_SYNC_APPLY_LOCAL_MIGRATIONS:-1}"
-ENSURE_BOOTSTRAP_USER="${AIWAH_DB_SYNC_ENSURE_BOOTSTRAP_USER:-1}"
+SYNC_DIR="${HQ_DB_SYNC_DIR:-${ROOT_DIR}/.cache/db-sync}"
+KEEP_DUMP="${HQ_DB_SYNC_KEEP_DUMP:-0}"
+BACKUP_LOCAL="${HQ_DB_SYNC_BACKUP_LOCAL:-1}"
+APPLY_LOCAL_MIGRATIONS="${HQ_DB_SYNC_APPLY_LOCAL_MIGRATIONS:-1}"
+ENSURE_BOOTSTRAP_USER="${HQ_DB_SYNC_ENSURE_BOOTSTRAP_USER:-1}"
 
 DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=${DB_SCHEMA}"
 COMMAND="${1:-pull}"
@@ -38,13 +38,13 @@ Commands:
   doctor  Check SSH, remote container access, and local Postgres prerequisites
 
 Environment overrides:
-  AIWAH_PROD_SSH_HOST              SSH target for the prod host
-  AIWAH_PROD_POSTGRES_CONTAINER    Prod Postgres container name
-  AIWAH_DB_SYNC_DIR                Local directory for dumps/backups
-  AIWAH_DB_SYNC_KEEP_DUMP          Keep the downloaded prod dump (1/0)
-  AIWAH_DB_SYNC_BACKUP_LOCAL       Backup local DB before overwrite (1/0)
-  AIWAH_DB_SYNC_APPLY_LOCAL_MIGRATIONS
-  AIWAH_DB_SYNC_ENSURE_BOOTSTRAP_USER
+  HQ_PROD_SSH_HOST              SSH target for the prod host
+  HQ_PROD_POSTGRES_CONTAINER    Prod Postgres container name
+  HQ_DB_SYNC_DIR                Local directory for dumps/backups
+  HQ_DB_SYNC_KEEP_DUMP          Keep the downloaded prod dump (1/0)
+  HQ_DB_SYNC_BACKUP_LOCAL       Backup local DB before overwrite (1/0)
+  HQ_DB_SYNC_APPLY_LOCAL_MIGRATIONS
+  HQ_DB_SYNC_ENSURE_BOOTSTRAP_USER
   DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD / DB_SCHEMA
 EOF
 }

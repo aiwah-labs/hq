@@ -1,17 +1,17 @@
 import { db } from './client.js';
-import { createHash } from 'crypto';
+import bcrypt from 'bcryptjs';
 import { seedModules } from './seed-modules/index.js';
 
 async function main() {
   // Platform seed: canonical admin user. Runs on every seed call.
   const email = process.env.SUPERADMIN_EMAIL_ALLOWLIST?.split(',')[0]?.trim() ?? 'admin@example.com';
   const password = 'changeme';
-  const passwordHash = createHash('sha256').update(password).digest('hex');
+  const passwordHash = await bcrypt.hash(password, 12);
 
   await db.user.upsert({
     where: { email },
-    update: {},
-    create: { email, passwordHash, name: 'Admin', role: 'ADMIN' },
+    update: { passwordHash, status: 'ACTIVE', role: 'ADMIN' },
+    create: { email, passwordHash, name: 'Admin', role: 'ADMIN', status: 'ACTIVE' },
   });
 
   console.log(`Seeded admin user: ${email} / ${password}`);

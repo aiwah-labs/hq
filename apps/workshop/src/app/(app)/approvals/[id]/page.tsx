@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requirePermission } from '@/lib/auth';
 import { PERMISSIONS } from '@/lib/access';
@@ -31,53 +32,64 @@ export default async function ApprovalDetailPage({ params }: { params: Promise<{
   ];
 
   return (
-    <div className="flex h-full flex-col" data-testid="approval-detail">
-      <div className="border-b border-[var(--border)] px-6 py-4">
-        <h1 className="text-[18px] font-semibold text-[var(--fg)]">{approval.actionName}</h1>
-        <p className="mt-0.5 text-[13px] text-[var(--muted)]">Approval request {approval.id}</p>
+    <div className="space-y-4" data-testid="approval-detail">
+      {/* Header */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <span className="font-medium">Home</span>
+          <span className="text-[#d0d6e0]">/</span>
+          <Link href="/approvals" className="hover:text-[#0f1011] transition-colors">Approvals</Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <span>{approval.id.slice(0, 8)}…</span>
+        </div>
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">{approval.actionName}</h1>
+        <p className="mt-2 text-[12.5px] text-[#62666d]">Approval request {approval.id}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 border-b border-[var(--border)] px-6 py-4 md:grid-cols-2">
-        <dl className="text-[13px]">
-          {rows.map(([k, v]) => (
-            <div key={k} className="flex gap-2 py-1">
-              <dt className="w-28 text-[var(--muted)]">{k}</dt>
-              <dd className="text-[var(--fg)]">{v}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="text-[13px]">
-          <div className="text-[12px] uppercase tracking-wide text-[var(--muted)]">Input</div>
-          <pre className="mt-1 max-h-64 overflow-auto rounded-md bg-black/30 p-3 text-[12px] text-[var(--fg)]">
-            {JSON.stringify(approval.input, null, 2)}
-          </pre>
-          {serialized && (
-            <>
-              <div className="mt-3 text-[12px] uppercase tracking-wide text-[var(--muted)]">Impact</div>
-              <div className="mt-1 text-[13px] text-[var(--fg)]">
-                <div>Reads: {serialized.objects?.reads?.join(', ') ?? '—'}</div>
-                <div>Writes: {serialized.objects?.writes?.join(', ') ?? '—'}</div>
-                <div>Deletes: {serialized.objects?.deletes?.join(', ') ?? '—'}</div>
+      {/* Details + Input */}
+      <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+        <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
+          <dl className="space-y-1">
+            {rows.map(([k, v]) => (
+              <div key={k} className="flex gap-3">
+                <dt className="w-28 text-[11px] font-medium text-[#8a8f98]">{k}</dt>
+                <dd className="text-[12.5px] text-[#0f1011]">{v}</dd>
               </div>
-            </>
-          )}
+            ))}
+          </dl>
+          <div>
+            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">Input</p>
+            <pre className="max-h-64 overflow-auto rounded-md border border-[#e6e8eb] bg-[#fafbfb] p-3 font-mono text-[11px] leading-relaxed text-[#0f1011]">
+              {JSON.stringify(approval.input, null, 2)}
+            </pre>
+            {serialized && (
+              <div className="mt-3 space-y-0.5">
+                <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">Impact</p>
+                <p className="text-[12.5px] text-[#62666d]">Reads: {serialized.objects?.reads?.join(', ') ?? '—'}</p>
+                <p className="text-[12.5px] text-[#62666d]">Writes: {serialized.objects?.writes?.join(', ') ?? '—'}</p>
+                <p className="text-[12.5px] text-[#62666d]">Deletes: {serialized.objects?.deletes?.join(', ') ?? '—'}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Decision */}
       {approval.status === 'PENDING' ? (
-        <div className="px-6 py-4">
+        <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white p-4">
           <ApprovalDecisionForm id={approval.id} />
         </div>
       ) : (
-        <div className="px-6 py-4 text-[13px] text-[var(--muted)]">
+        <p className="text-[12.5px] text-[#62666d]">
           Decided {approval.decidedAt?.toISOString()} by {approval.decidedByUserId ?? 'system'}.
-        </div>
+        </p>
       )}
 
-      <div className="border-t border-[var(--border)] px-6 py-4">
-        <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Activity
-        </h2>
+      {/* Activity */}
+      <div>
+        <div className="mb-2.5">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Activity</h2>
+        </div>
         <ActivityTimeline correlationId={approval.id} />
       </div>
     </div>

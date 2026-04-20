@@ -42,8 +42,8 @@ export function Tab({ value, activeTab, onClick, children, className }: TabProps
       className={cn(
         'relative shrink-0 px-3 py-2 text-[13px] font-medium transition-colors whitespace-nowrap',
         isActive
-          ? 'text-brand-teal-dark after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-brand-teal after:content-[""]'
-          : 'text-[var(--app-muted)] hover:text-[var(--app-fg)]',
+          ? 'text-[#0f1011] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#0f1011] after:content-[""]'
+          : 'text-[#62666d] hover:text-[#0f1011]',
         className
       )}
     >

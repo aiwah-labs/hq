@@ -39,22 +39,24 @@ export default async function ObjectEditPage({ params }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col" data-testid={`object-edit-${type}-${id}`}>
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-        <div>
-          <Link
-            href={`/objects/${type}/${id}`}
-            className="text-[12px] text-[var(--muted)] hover:text-[var(--fg)]"
-          >
-            ← Back
-          </Link>
-          <h1 className="mt-0.5 text-[18px] font-semibold text-[var(--fg)]">
-            Edit {schema.label}
-          </h1>
+    <div className="space-y-4" data-testid={`object-edit-${type}-${id}`}>
+      {/* Header */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <span className="font-medium">Home</span>
+          <span className="text-[#d0d6e0]">/</span>
+          <Link href={`/objects/${type}`} className="hover:text-[#0f1011] transition-colors">{schema.pluralLabel}</Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <Link href={`/objects/${type}/${id}`} className="hover:text-[#0f1011] transition-colors">{id.slice(0, 8)}…</Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <span>Edit</span>
         </div>
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">
+          Edit {schema.label}
+        </h1>
       </div>
 
-      <div className="max-w-xl p-6">
+      <div className="max-w-xl">
         <ObjectForm
           schema={schema}
           formFields={formFields}

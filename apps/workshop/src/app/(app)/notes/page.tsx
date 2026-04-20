@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requirePermission } from '@/lib/auth';
 import { ROUTE_PERMISSIONS } from '@/lib/access';
 import { getSessionApiClient } from '@/lib/api-client';
+import { EmptyState, Button } from '@/components/ui';
 import { CreateNoteModal } from './create-note-modal';
 
 function formatDate(d: string | Date | null): string {
@@ -17,29 +18,15 @@ function formatDate(d: string | Date | null): string {
 
 function notePreview(body: string): string {
   const stripped = body.replace(/^#+\s+.*/gm, '').replace(/[*_`#>[\]]/g, '').trim();
-  return stripped.length > 140 ? `${stripped.slice(0, 140)}…` : stripped || 'No content.';
+  return stripped.length > 120 ? `${stripped.slice(0, 120)}…` : stripped || 'No content.';
 }
 
-interface SearchParams {
-  q?: string;
-  tag?: string;
-}
-
-interface Props {
-  searchParams: Promise<SearchParams>;
-}
-
+interface SearchParams { q?: string; tag?: string; }
+interface Props { searchParams: Promise<SearchParams>; }
 interface Note {
-  id: string;
-  title: string;
-  body: string;
-  slug: string | null;
-  tags: string[];
-  authorType: string;
-  authorId: string;
-  isPinned: boolean;
-  createdAt: string;
-  updatedAt: string;
+  id: string; title: string; body: string; slug: string | null;
+  tags: string[]; authorType: string; authorId: string;
+  isPinned: boolean; createdAt: string; updatedAt: string;
 }
 
 export default async function NotesPage({ searchParams }: Props) {
@@ -52,58 +39,75 @@ export default async function NotesPage({ searchParams }: Props) {
   const regularNotes = notes.filter((n) => !n.isPinned);
 
   return (
-    <div className="flex h-full flex-col" data-testid="notes-page">
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+    <div className="space-y-4" data-testid="notes-page">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[18px] font-semibold text-[var(--fg)]">Notes</h1>
-          <p className="mt-0.5 text-[13px] text-[var(--muted)]">
-            {notes.length} {notes.length === 1 ? 'note' : 'notes'}{sp.q ? ` matching "${sp.q}"` : ''}
+          <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+            <span className="font-medium">Home</span>
+            <span className="text-[#d0d6e0]">/</span>
+            <span>Notes</span>
+          </div>
+          <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">Notes</h1>
+          <p className="mt-2 text-[12.5px] text-[#62666d]">
+            {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+            {sp.q ? ` matching "${sp.q}"` : ''}
           </p>
         </div>
-        <CreateNoteModal />
+        <div className="shrink-0 pt-1">
+          <CreateNoteModal />
+        </div>
       </div>
 
-      {/* Search bar */}
-      <form method="GET" className="flex items-center gap-2 border-b border-[var(--border)] px-6 py-3">
+      {/* Search */}
+      <form method="GET" className="flex items-center gap-2">
         <input
           type="search"
           name="q"
           defaultValue={sp.q ?? ''}
           placeholder="Search notes…"
-          className="h-8 w-64 rounded-[6px] border border-[var(--border)] bg-[var(--input-bg)] px-3 text-[13px] text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-teal)]"
+          className="h-8 w-56 rounded-md border border-[#e6e8eb] bg-white px-3 text-[12.5px] text-[#0f1011] placeholder:text-[#8a8f98] focus:outline-none focus:ring-2 focus:ring-[#009E85]/40 focus:ring-offset-1 transition-colors"
           data-testid="notes-search"
         />
         {sp.q && (
-          <Link href="/notes" className="text-[12px] text-[var(--muted)] hover:text-[var(--fg)]">
+          <Link href="/notes" className="text-[12px] text-[#62666d] hover:text-[#0f1011] transition-colors">
             Clear
           </Link>
         )}
       </form>
 
-      <div className="flex-1 overflow-y-auto px-6 py-5">
-        {notes.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-[15px] font-medium text-[var(--fg)]">No notes yet</p>
-            <p className="mt-1 text-[13px] text-[var(--muted)]">Create your first note to get started</p>
-          </div>
-        )}
-
-        {pinnedNotes.length > 0 && (
-          <section className="mb-6">
-            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">Pinned</h2>
-            <NoteGrid notes={pinnedNotes} />
-          </section>
-        )}
-
-        {regularNotes.length > 0 && (
-          <section>
-            {pinnedNotes.length > 0 && (
-              <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">All Notes</h2>
-            )}
-            <NoteGrid notes={regularNotes} />
-          </section>
-        )}
-      </div>
+      {notes.length === 0 ? (
+        <div className="rounded-lg border border-[#e6e8eb] bg-white">
+          <EmptyState
+            title={sp.q ? `No notes matching "${sp.q}"` : 'No notes yet'}
+            description={sp.q ? undefined : 'Create your first note to get started.'}
+            action={sp.q ? undefined : <CreateNoteModal />}
+          />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {pinnedNotes.length > 0 && (
+            <div>
+              <div className="mb-2.5 flex items-baseline gap-2">
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Pinned</h2>
+                <p className="text-[11px] text-[#8a8f98]">&mdash; {pinnedNotes.length}</p>
+              </div>
+              <NoteGrid notes={pinnedNotes} />
+            </div>
+          )}
+          {regularNotes.length > 0 && (
+            <div>
+              {pinnedNotes.length > 0 && (
+                <div className="mb-2.5 flex items-baseline gap-2">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">All notes</h2>
+                  <p className="text-[11px] text-[#8a8f98]">&mdash; {regularNotes.length}</p>
+                </div>
+              )}
+              <NoteGrid notes={regularNotes} />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -116,29 +120,29 @@ function NoteGrid({ notes }: { notes: Note[] }) {
           key={note.id}
           href={`/notes/${note.id}`}
           data-testid={`note-card-${note.id}`}
-          className="group relative flex flex-col rounded-[8px] border border-[var(--border)] bg-[var(--card-bg)] p-4 transition-colors hover:border-[var(--color-brand-teal)]/40 hover:bg-[var(--card-bg-hover)]"
+          className="group relative flex flex-col rounded-lg border border-[#e6e8eb] bg-white p-4 hover:bg-[#fafbfb] hover:border-[#d0d6e0] transition-colors duration-100"
         >
           {note.isPinned && (
-            <span className="absolute right-3 top-3 text-[10px] text-[var(--muted)]">📌</span>
+            <span className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-[#009E85]" aria-label="Pinned" />
           )}
-          <h3 className="mb-1.5 pr-5 text-[14px] font-semibold leading-snug text-[var(--fg)] line-clamp-2">
+          <h3 className="mb-1.5 pr-4 text-[12.5px] font-medium leading-snug text-[#0f1011] line-clamp-2">
             {note.title}
           </h3>
-          <p className="flex-1 text-[12px] leading-relaxed text-[var(--muted)] line-clamp-3">
+          <p className="flex-1 text-[12px] leading-relaxed text-[#62666d] line-clamp-3">
             {notePreview(note.body)}
           </p>
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between gap-2">
             <div className="flex flex-wrap gap-1">
               {note.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-[var(--color-brand-teal)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--color-brand-teal)]"
+                  className="rounded bg-[#E0F7F3] px-1.5 py-0.5 text-[10.5px] font-medium text-[#007A66]"
                 >
                   {tag}
                 </span>
               ))}
             </div>
-            <span className="text-[11px] text-[var(--muted)]">{formatDate(note.updatedAt)}</span>
+            <span className="shrink-0 text-[11px] text-[#8a8f98]">{formatDate(note.updatedAt)}</span>
           </div>
         </Link>
       ))}

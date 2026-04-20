@@ -37,7 +37,7 @@ export async function ActivityTimeline({
   if (events.length === 0) {
     return (
       <div
-        className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 py-6 text-[13px] text-[var(--muted)]"
+        className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-4 py-6 text-[13px] text-[#62666d]"
         data-testid="activity-empty"
       >
         No activity recorded yet.
@@ -46,18 +46,18 @@ export async function ActivityTimeline({
   }
 
   return (
-    <ol className="divide-y divide-[var(--border)] rounded-md border border-[var(--border)] bg-[var(--surface)]" data-testid="activity-timeline">
+    <ol className="divide-y divide-[#e6e8eb] rounded-md border border-[#e6e8eb] bg-[#ffffff]" data-testid="activity-timeline">
       {events.map((e) => (
         <li key={e.id} className="flex items-start gap-3 px-4 py-3" data-testid={`event-${e.id}`}>
-          <span className="mt-0.5 flex h-5 min-w-[60px] items-center justify-center rounded bg-black/20 px-2 font-mono text-[11px] text-[var(--muted)]">
+          <span className="mt-0.5 flex h-5 min-w-[60px] items-center justify-center rounded bg-black/20 px-2 font-mono text-[11px] text-[#62666d]">
             {e.actorType}
           </span>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[12px] text-[var(--fg)]">{e.type}</span>
-              <span className="text-[11px] text-[var(--muted)]">{formatTime(e.createdAt)}</span>
+              <span className="font-mono text-[12px] text-[#0f1011]">{e.type}</span>
+              <span className="text-[11px] text-[#62666d]">{formatTime(e.createdAt)}</span>
             </div>
-            <div className="mt-0.5 text-[12px] text-[var(--muted)]">
+            <div className="mt-0.5 text-[12px] text-[#62666d]">
               by {e.actorId}
               {e.actionName ? ` · ${e.actionName}` : ''}
               {e.workflowRunId ? ` · workflow:${e.workflowRunId}` : ''}

@@ -44,29 +44,32 @@ export default async function ObjectDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col" data-testid={`object-detail-page-${type}-${id}`}>
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+    <div className="space-y-4" data-testid={`object-detail-page-${type}-${id}`}>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <Link
-            href={`/objects/${type}`}
-            className="text-[12px] text-[var(--muted)] hover:text-[var(--fg)]"
-          >
-            ← {schema.pluralLabel}
-          </Link>
-          <h1 className="mt-0.5 text-[18px] font-semibold text-[var(--fg)]">{title}</h1>
+          <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+            <span className="font-medium">Home</span>
+            <span className="text-[#d0d6e0]">/</span>
+            <Link href={`/objects/${type}`} className="hover:text-[#0f1011] transition-colors">{schema.pluralLabel}</Link>
+            <span className="text-[#d0d6e0]">/</span>
+            <span>{title}</span>
+          </div>
+          <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">{title}</h1>
         </div>
-        <ObjectActionsMenu schema={schema} id={id} deleteAction={onDelete} />
+        <div className="shrink-0 pt-1">
+          <ObjectActionsMenu schema={schema} id={id} deleteAction={onDelete} />
+        </div>
       </div>
 
-      <div className="space-y-6 p-6">
-        <ObjectDetail schema={schema} detailFields={detailFields} record={record} />
-        <section data-testid="object-activity">
-          <h2 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Activity
-          </h2>
-          <ActivityTimeline objectType={type} objectId={id} />
-        </section>
-      </div>
+      <ObjectDetail schema={schema} detailFields={detailFields} record={record} />
+
+      <section data-testid="object-activity">
+        <div className="mb-2.5">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Activity</h2>
+        </div>
+        <ActivityTimeline objectType={type} objectId={id} />
+      </section>
     </div>
   );
 }

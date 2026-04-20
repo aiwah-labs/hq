@@ -46,7 +46,7 @@ export function ObjectTable({ schema, listFields, rows, emptyHref }: Props) {
                     {idx === 0 ? (
                       <Link
                         href={`/objects/${schema.type}/${id}`}
-                        className="text-[var(--fg)] hover:text-[var(--accent)] hover:underline"
+                        className="text-[#0f1011] hover:text-[#009E85] hover:underline"
                       >
                         <ObjectFieldValue field={f} value={getRowValue(row, f)} />
                       </Link>

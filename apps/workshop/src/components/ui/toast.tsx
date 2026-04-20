@@ -15,9 +15,9 @@ export function Toast({ title, message, tone = 'neutral' }: ToastProps) {
       <CardBody>
         <div className="flex items-center gap-2">
           <Badge tone={badgeTone}>{tone}</Badge>
-          <p className="text-[13px] font-semibold text-[var(--app-fg)]">{title}</p>
+          <p className="text-[13px] font-semibold text-[#0f1011]">{title}</p>
         </div>
-        {message ? <p className="mt-2 text-[13px] text-[var(--app-muted)]">{message}</p> : null}
+        {message ? <p className="mt-2 text-[13px] text-[#62666d]">{message}</p> : null}
       </CardBody>
     </Card>
   );

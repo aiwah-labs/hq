@@ -36,7 +36,7 @@ export function ObjectFilterBar({ schema, filterableFields }: Props) {
         name="q"
         defaultValue={params.get('q') ?? ''}
         placeholder={`Search ${schema.pluralLabel.toLowerCase()}`}
-        className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px]"
+        className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px]"
       />
       {filterableFields
         .filter((f) => f.type === 'enum' && f.values)
@@ -45,7 +45,7 @@ export function ObjectFilterBar({ schema, filterableFields }: Props) {
             key={f.name}
             defaultValue={params.get(`filter.${f.name}`) ?? ''}
             onChange={(e) => updateParam(`filter.${f.name}`, e.target.value)}
-            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-[13px]"
+            className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-2 py-1.5 text-[13px]"
             aria-label={`Filter by ${f.label}`}
           >
             <option value="">{f.label}: any</option>
@@ -58,7 +58,7 @@ export function ObjectFilterBar({ schema, filterableFields }: Props) {
         ))}
       <button
         type="submit"
-        className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px] font-medium"
+        className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px] font-medium"
       >
         Search
       </button>

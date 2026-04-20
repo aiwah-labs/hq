@@ -6,7 +6,7 @@ export function Field({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 }
 
 export function FieldHint({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn('text-[12px] text-[var(--app-muted)]', className)} {...props} />;
+  return <p className={cn('text-[12px] text-[#62666d]', className)} {...props} />;
 }
 
 export function FieldError({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {

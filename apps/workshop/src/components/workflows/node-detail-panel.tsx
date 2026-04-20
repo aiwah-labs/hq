@@ -87,7 +87,7 @@ export function NodeDetailPanel({ step, onClose }: NodeDetailPanelProps) {
     step.metadata;
 
   return (
-    <div className="flex h-full flex-col border-l border-divider bg-[var(--app-bg-elevated)]" data-testid="node-detail-panel">
+    <div className="flex h-full flex-col border-l border-divider bg-[#ffffff]" data-testid="node-detail-panel">
       {/* Header */}
       <div className="shrink-0 border-b border-divider px-4 py-3">
         <div className="flex items-start justify-between gap-2">
@@ -275,7 +275,7 @@ function DataTable({ data }: { data: unknown }) {
     // Array of primitives
     if (typeof data[0] !== 'object') {
       return (
-        <div className="divide-y divide-divider/50">
+        <div className="divide-y divide-[#eff0f2]/50">
           {data.map((item, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-1.5">
               <span className="text-[10px] text-muted tabular-nums w-6 shrink-0">{i}</span>
@@ -287,7 +287,7 @@ function DataTable({ data }: { data: unknown }) {
     }
     // Array of objects — show first item as key-value
     return (
-      <div className="divide-y divide-divider/50">
+      <div className="divide-y divide-[#eff0f2]/50">
         {data.map((item, i) => (
           <div key={i} className="px-4 py-2">
             <p className="text-[10px] font-medium text-muted mb-1">Item {i}</p>
@@ -322,7 +322,7 @@ function KeyValueRows({ obj }: { obj: Record<string, unknown> }) {
   const entries = Object.entries(obj);
 
   return (
-    <div className="divide-y divide-divider/30">
+    <div className="divide-y divide-[#eff0f2]/30">
       {entries.map(([key, value]) => (
         <div key={key} className="flex gap-3 py-1.5 min-h-[28px]">
           <span className="text-[11px] font-medium text-muted w-[140px] shrink-0 truncate pt-0.5">{key}</span>

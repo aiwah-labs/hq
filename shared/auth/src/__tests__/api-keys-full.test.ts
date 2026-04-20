@@ -41,9 +41,9 @@ beforeEach(() => {
 // ── generateApiKey ───────────────────────────────────────────────────────────
 
 describe('generateApiKey', () => {
-  it('returns key with aiwah_ prefix', () => {
+  it('returns key with hq_ prefix', () => {
     const { key } = generateApiKey();
-    expect(key).toMatch(/^aiwah_[a-f0-9]{12}_/);
+    expect(key).toMatch(/^hq_[a-f0-9]{12}_/);
   });
 
   it('returns a 12-char hex prefix', () => {
@@ -72,12 +72,12 @@ describe('createApiKey', () => {
     });
 
     expect(result.id).toBe('key_1');
-    expect(result.key).toMatch(/^aiwah_/);
+    expect(result.key).toMatch(/^hq_/);
     expect(result.prefix).toMatch(/^[a-f0-9]{12}$/);
 
     // Verify DB was called with hashed key (not raw)
     const createCall = mockDb.apiKey.create.mock.calls[0][0].data;
-    expect(createCall.keyHash).not.toContain('aiwah_');
+    expect(createCall.keyHash).not.toContain('hq_');
     expect(createCall.keyHash.startsWith('$2')).toBe(true); // bcrypt hash
     expect(createCall.botId).toBe('bot_1');
     expect(createCall.scopes).toEqual(['note.read', 'note.write']);
@@ -143,13 +143,13 @@ describe('validateApiKey', () => {
     expect(await validateApiKey(null)).toBeNull();
   });
 
-  it('returns null for non-aiwah key', async () => {
+  it('returns null for key without valid prefix', async () => {
     expect(await validateApiKey('sk_test_abc')).toBeNull();
   });
 
   it('returns null when no candidates found', async () => {
     mockDb.apiKey.findMany.mockResolvedValue([]);
-    expect(await validateApiKey('aiwah_abcdef012345_secret')).toBeNull();
+    expect(await validateApiKey('hq_abcdef012345_secret')).toBeNull();
   });
 
   it('returns null when hash does not match', async () => {
@@ -161,7 +161,7 @@ describe('validateApiKey', () => {
     }]);
     mockDb.apiKeyEvent.createMany.mockResolvedValue({});
 
-    const result = await validateApiKey('aiwah_abcdef012345_wrongsecret');
+    const result = await validateApiKey('hq_abcdef012345_wrongsecret');
     expect(result).toBeNull();
     expect(mockDb.apiKeyEvent.createMany).toHaveBeenCalled();
   });
@@ -169,7 +169,7 @@ describe('validateApiKey', () => {
   it('returns null when bot is not active', async () => {
     // First create a real key so we can match the hash
     const bcrypt = await import('bcryptjs');
-    const raw = 'aiwah_abcdef012345_testsecret123456789012';
+    const raw = 'hq_abcdef012345_testsecret123456789012';
     const hash = await bcrypt.hash(`${raw}.test-pepper`, 12);
 
     mockDb.apiKey.findMany.mockResolvedValue([{
@@ -192,7 +192,7 @@ describe('validateApiKey', () => {
 
   it('returns the candidate and logs AUTH_SUCCESS on valid key', async () => {
     const bcrypt = await import('bcryptjs');
-    const raw = 'aiwah_abcdef012345_validsecret12345678901';
+    const raw = 'hq_abcdef012345_validsecret12345678901';
     const hash = await bcrypt.hash(`${raw}.test-pepper`, 4); // low rounds for speed
 
     const candidate = {

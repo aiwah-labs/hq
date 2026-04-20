@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { describeOidcProvider, readOidcEnv } from '@hq/auth/providers';
 import { Alert, Card, CardBody, CardHeader, Field, Input, Label, SubmitButton } from '@/components/ui';
+import { APP_ICON, APP_NAME } from '@/config/brand';
 import { getCurrentUser } from '@/lib/auth';
 import { loginAction } from './actions';
 
@@ -40,9 +41,9 @@ export default async function LoginPage({ searchParams }: Props) {
         <CardHeader className="border-b-0 pb-0">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-[6px] bg-brand-teal/10 ring-1 ring-brand-teal/25">
-              <Image src="/assets/brand/logo-icon.svg" alt="Aiwah logo" width={21} height={21} priority />
+              <Image src={APP_ICON} alt={`${APP_NAME} logo`} width={21} height={21} priority />
             </div>
-            <p className="font-wordmark text-[14px] font-light uppercase tracking-[0.12em] text-[var(--app-fg)]">
+            <p className="font-wordmark text-[14px] font-light uppercase tracking-[0.12em] text-[#0f1011]">
               WORKSHOP
             </p>
           </div>

@@ -18,8 +18,8 @@ export default async function NewUserPage({ searchParams }: Props) {
         <Link href="/users" className="text-[12px] text-muted hover:underline">
           ← Back to users
         </Link>
-        <h1 className="mt-1 font-display text-[18px] font-semibold leading-tight">Create user</h1>
-        <p className="mt-0.5 text-[13px] text-muted">
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">Create user</h1>
+        <p className="mt-0.5 text-[12.5px] text-[#62666d]">
           Bootstrap a local-password user. SSO users provision automatically on first sign-in.
         </p>
       </div>

@@ -15,10 +15,16 @@ export const BOT_SCOPES = [
   'contact.read', 'contact.write', 'contact.delete',
   // CRM — campaigns
   'campaign.read', 'campaign.write', 'campaign.delete',
+  // CRM — orders
+  'order.read', 'order.write', 'order.delete',
   // CRM — prospects
   'prospect.read', 'prospect.write',
   // Integrations
   'integration.execute',
+  // Projects
+  'project.read', 'project.write', 'project.delete',
+  // Tasks
+  'task.read', 'task.write', 'task.delete',
   // Workflows
   'workflow.read', 'workflow.execute',
 ] as const;
@@ -90,7 +96,10 @@ export interface BotPrincipal {
   source: 'apikey';
   apiKeyId: string;
   botId: string;
+  botSlug: string;
   botName: string;
+  createdByUserId: string;
+  createdByEmail: string;
   scopes: BotScope[];
   permissions: PermissionMap;
 }

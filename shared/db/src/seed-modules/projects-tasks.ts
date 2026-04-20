@@ -1,10 +1,12 @@
 /**
- * Seed — Projects & Tasks example module.
+ * Seed — Projects & Tasks module.
  *
  * Idempotent: running repeatedly converges on the same state. Projects are
  * keyed by name; tasks by (projectId, title). Ownership is assigned to the
- * first admin user the seed finds — adjust to your deployment's real users
- * when you fork.
+ * first admin user the seed finds.
+ *
+ * Also seeds representative InboxItems so the inbox page is non-empty on
+ * first boot. Inbox items are keyed by (recipientUserId, type, sourceId).
  */
 import type { db as Db } from '../client.js';
 
@@ -81,10 +83,26 @@ const PROJECTS: SeedProject[] = [
     targetInDays: 14,
     tasks: [
       { title: 'Audit top 10 error sources', status: 'DONE', priority: 'HIGH', dueInDays: -3 },
-      { title: 'Instrument p95 latency alerts', status: 'IN_PROGRESS', priority: 'URGENT', dueInDays: -4 }, // overdue
+      { title: 'Instrument p95 latency alerts', status: 'IN_PROGRESS', priority: 'URGENT', dueInDays: -4 },
       { title: 'Fix N+1 in customer list endpoint', status: 'TODO', priority: 'HIGH', dueInDays: 2 },
       { title: 'Decide on tracing vendor', status: 'BLOCKED', priority: 'MEDIUM', dueInDays: -5, blockedReason: 'Vendor selection pending budget approval' },
       { title: 'Write runbook for DB failover', status: 'TODO', priority: 'MEDIUM', dueInDays: 9 },
+    ],
+  },
+  {
+    name: 'Hire first account executive',
+    summary: 'Close on a quota-carrying AE before end of quarter to own outbound.',
+    status: 'ACTIVE',
+    priority: 'HIGH',
+    startInDays: -10,
+    targetInDays: 35,
+    tasks: [
+      { title: 'Write job description', status: 'DONE', priority: 'HIGH', dueInDays: -8 },
+      { title: 'Post to LinkedIn + AngelList', status: 'DONE', priority: 'MEDIUM', dueInDays: -5 },
+      { title: 'Phone screen top 10 applicants', status: 'IN_PROGRESS', priority: 'HIGH', dueInDays: 4 },
+      { title: 'Run structured panel interviews', status: 'TODO', priority: 'HIGH', dueInDays: 14 },
+      { title: 'Check references + make offer', status: 'TODO', priority: 'HIGH', dueInDays: 25 },
+      { title: 'Draft comp & equity framework', status: 'BLOCKED', priority: 'MEDIUM', dueInDays: 3, blockedReason: 'Cap table review needed before setting equity bands' },
     ],
   },
 ];
@@ -137,7 +155,72 @@ export async function seedProjectsTasks(db: typeof Db): Promise<void> {
     }
   }
 
+  // Seed representative inbox items so the inbox is non-empty on first boot.
+  // Keyed by sourceId to stay idempotent.
+  const allProjects = await db.project.findMany({ include: { tasks: true } });
+  for (const project of allProjects) {
+    const blockedTask = project.tasks.find((t) => t.status === 'BLOCKED');
+    const overdueTask = project.tasks.find(
+      (t) => t.dueAt && t.dueAt < new Date() && t.status !== 'DONE' && t.status !== 'CANCELLED',
+    );
+    const assignedTask = project.tasks.find((t) => t.assigneeUserId === owner.id && t.status === 'TODO');
+
+    const itemsToCreate: Array<{
+      type: string;
+      title: string;
+      body: string;
+      sourceType: string;
+      sourceId: string;
+      actionUrl: string;
+    }> = [];
+
+    if (blockedTask) {
+      itemsToCreate.push({
+        type: 'task_blocked',
+        title: `Blocked: ${blockedTask.title}`,
+        body: blockedTask.blockedReason ?? `In "${project.name}" — needs attention`,
+        sourceType: 'Task',
+        sourceId: blockedTask.id,
+        actionUrl: `/projects/${project.id}`,
+      });
+    }
+
+    if (overdueTask) {
+      itemsToCreate.push({
+        type: 'task_overdue',
+        title: `Overdue: ${overdueTask.title}`,
+        body: `In "${project.name}" — past due date`,
+        sourceType: 'Task',
+        sourceId: overdueTask.id,
+        actionUrl: `/projects/${project.id}`,
+      });
+    }
+
+    if (assignedTask) {
+      itemsToCreate.push({
+        type: 'task_assigned',
+        title: `Task assigned: ${assignedTask.title}`,
+        body: `In project "${project.name}"`,
+        sourceType: 'Task',
+        sourceId: assignedTask.id,
+        actionUrl: `/projects/${project.id}`,
+      });
+    }
+
+    for (const item of itemsToCreate) {
+      const exists = await db.inboxItem.findFirst({
+        where: { sourceType: item.sourceType, sourceId: item.sourceId, type: item.type },
+      });
+      if (!exists) {
+        await db.inboxItem.create({
+          data: { recipientUserId: owner.id, ...item },
+        });
+      }
+    }
+  }
+
   const totalProjects = await db.project.count();
   const totalTasks = await db.task.count();
-  console.log(`Seeded example module: projects-tasks (${totalProjects} projects, ${totalTasks} tasks).`);
+  const totalInbox = await db.inboxItem.count();
+  console.log(`Seeded projects-tasks (${totalProjects} projects, ${totalTasks} tasks, ${totalInbox} inbox items).`);
 }

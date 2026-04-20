@@ -60,9 +60,19 @@ export default async function BotsPage({ searchParams }: Props) {
       ) : null}
 
       {/* Page header */}
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="font-display text-[18px] font-semibold tracking-tight @sm:text-[22px]">Bots</h1>
-        <CreateBotModal />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+            <span className="font-medium">Home</span>
+            <span className="text-[#d0d6e0]">/</span>
+            <span>Bots</span>
+          </div>
+          <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">Bots</h1>
+          <p className="mt-2 text-[12.5px] text-[#62666d]">Machine identities for API access and automation.</p>
+        </div>
+        <div className="shrink-0 pt-1">
+          <CreateBotModal />
+        </div>
       </div>
 
       {/* Bot selector */}
@@ -77,7 +87,7 @@ export default async function BotsPage({ searchParams }: Props) {
           ariaLabel="Bot navigation"
         />
       ) : (
-        <p className="text-[13px] text-muted">No bots yet. Create one to get started.</p>
+        <p className="text-[12.5px] text-[#62666d]">No bots yet. Create one to get started.</p>
       )}
 
       {/* Selected bot detail with tabs */}
@@ -86,8 +96,8 @@ export default async function BotsPage({ searchParams }: Props) {
           <CardHeader>
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <h2 className="truncate font-display text-[16px] font-semibold tracking-tight @sm:text-[18px]">{selectedBot.name}</h2>
-                <p className="mt-0.5 text-[13px] text-muted">/{selectedBot.slug}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011] truncate">{selectedBot.name}</p>
+                <p className="mt-0.5 text-[11px] text-[#8a8f98] font-mono">/{selectedBot.slug}</p>
               </div>
               <Badge tone="teal">{selectedBot.status}</Badge>
             </div>
@@ -98,19 +108,19 @@ export default async function BotsPage({ searchParams }: Props) {
                 <div className="space-y-4">
                   <dl className="grid gap-3 @sm:grid-cols-2">
                     <div>
-                      <dt className="text-[12px] font-medium text-[var(--app-muted)]">Created by</dt>
+                      <dt className="text-[12px] font-medium text-[#62666d]">Created by</dt>
                       <dd className="mt-0.5 text-[13px]">{selectedBot.createdByUser.email}</dd>
                     </div>
                     <div>
-                      <dt className="text-[12px] font-medium text-[var(--app-muted)]">Status</dt>
+                      <dt className="text-[12px] font-medium text-[#62666d]">Status</dt>
                       <dd className="mt-0.5"><Badge tone="teal">{selectedBot.status}</Badge></dd>
                     </div>
                     <div>
-                      <dt className="text-[12px] font-medium text-[var(--app-muted)]">Slug</dt>
+                      <dt className="text-[12px] font-medium text-[#62666d]">Slug</dt>
                       <dd className="mt-0.5 text-[13px] font-mono">/{selectedBot.slug}</dd>
                     </div>
                     <div>
-                      <dt className="text-[12px] font-medium text-[var(--app-muted)]">Members</dt>
+                      <dt className="text-[12px] font-medium text-[#62666d]">Members</dt>
                       <dd className="mt-0.5 text-[13px]">{selectedBot.members.length}</dd>
                     </div>
                   </dl>

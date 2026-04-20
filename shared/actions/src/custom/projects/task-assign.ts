@@ -14,12 +14,28 @@ defineAction({
   }),
   handler: async (params, ctx) => {
     if (params.assigneeUserId !== null) {
-      // Validate the user exists to avoid silent FK violations.
       await ctx.db.user.findUniqueOrThrow({ where: { id: params.assigneeUserId } });
     }
-    return ctx.db.task.update({
+    const task = await ctx.db.task.update({
       where: { id: params.taskId },
       data: { assigneeUserId: params.assigneeUserId },
+      include: { project: { select: { id: true, name: true } } },
     });
+
+    if (params.assigneeUserId) {
+      await ctx.db.inboxItem.create({
+        data: {
+          recipientUserId: params.assigneeUserId,
+          type: 'task_assigned',
+          title: `Task assigned: ${task.title}`,
+          body: `In project "${task.project.name}"`,
+          sourceType: 'Task',
+          sourceId: task.id,
+          actionUrl: `/projects/${task.project.id}`,
+        },
+      });
+    }
+
+    return task;
   },
 });

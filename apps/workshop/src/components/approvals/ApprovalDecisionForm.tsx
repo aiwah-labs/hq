@@ -28,13 +28,13 @@ export function ApprovalDecisionForm({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col gap-3" data-testid="approval-decision">
-      <label className="text-[12px] uppercase tracking-wide text-[var(--muted)]" htmlFor="approval-note">
+      <label className="text-[12px] uppercase tracking-wide text-[#62666d]" htmlFor="approval-note">
         Decision note (optional)
       </label>
       <textarea
         id="approval-note"
         data-testid="approval-note"
-        className="min-h-[80px] rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--fg)]"
+        className="min-h-[80px] rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-2 text-[13px] text-[#0f1011]"
         value={note}
         onChange={(e) => setNote(e.target.value)}
         disabled={pending}
@@ -45,7 +45,7 @@ export function ApprovalDecisionForm({ id }: { id: string }) {
           onClick={() => submit('approve')}
           disabled={pending}
           data-testid="approve-button"
-          className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-[13px] font-medium text-black hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-[#009E85] px-3 py-1.5 text-[13px] font-medium text-black hover:opacity-90 disabled:opacity-50"
         >
           {pending ? 'Working…' : 'Approve and run'}
         </button>
@@ -54,7 +54,7 @@ export function ApprovalDecisionForm({ id }: { id: string }) {
           onClick={() => submit('reject')}
           disabled={pending}
           data-testid="reject-button"
-          className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px] font-medium text-[var(--fg)] hover:border-[var(--danger)] disabled:opacity-50"
+          className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px] font-medium text-[#0f1011] hover:border-[var(--danger)] disabled:opacity-50"
         >
           Reject
         </button>

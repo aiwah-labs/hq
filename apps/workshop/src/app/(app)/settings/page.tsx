@@ -28,24 +28,24 @@ export default async function SettingsPage({ searchParams }: Props) {
 
       <Card>
         <CardHeader>
-          <h1 className="font-display text-[18px] font-semibold tracking-tight">Settings</h1>
+          <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">Settings</h1>
         </CardHeader>
         <CardBody className="space-y-5 pt-1">
           <section className="space-y-2">
-            <h2 className="text-[13px] font-medium text-[var(--app-fg)]">Appearance</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Appearance</h2>
             <AppearanceToggle current={current} action={setThemePreferenceAction} />
           </section>
 
           {showIntegrations ? (
             <section className="space-y-2">
-              <h2 className="text-[13px] font-medium text-[var(--app-fg)]">Integrations</h2>
-              <p className="text-[12px] text-[var(--app-muted)]">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Integrations</h2>
+              <p className="text-[12px] text-[#62666d]">
                 Connect third-party services (Shopify, GitHub, Slack, …) so actions and agents can
                 use them.
               </p>
               <Link
                 href="/settings/integrations"
-                className="inline-flex items-center text-[13px] text-[var(--color-brand-teal)] underline-offset-2 hover:underline"
+                className="inline-flex items-center text-[13px] text-[#009E85] underline-offset-2 hover:underline"
                 data-testid="settings-integrations-link"
               >
                 Manage integrations →
@@ -54,7 +54,7 @@ export default async function SettingsPage({ searchParams }: Props) {
           ) : null}
 
           <section className="space-y-2">
-            <h2 className="text-[13px] font-medium text-[var(--app-fg)]">Account</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Account</h2>
             <form action={logoutAction}>
               <SubmitButton variant="secondary" size="sm">
                 Log out
