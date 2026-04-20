@@ -1,4 +1,4 @@
-import { Badge, Card, CardBody, CardHeader } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { requirePermission } from '@/lib/auth';
 import { ROUTE_PERMISSIONS } from '@/lib/access';
 import { getSessionApiClient } from '@/lib/api-client';
@@ -35,21 +35,21 @@ function MessageBubble({ msg, index }: { msg: any; index: number }) {
       data-testid={`msg-${index}`}
     >
       <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[12px] ${
-        isAssistant ? 'bg-brand-teal/10 text-brand-teal' :
+        isAssistant ? 'bg-[#E0F7F3] text-[#009E85]' :
         isTool ? 'bg-amber-500/10 text-amber-600' :
-        isSystem ? 'bg-[var(--app-bg-elevated)] text-[var(--app-muted)]' :
-        'bg-[var(--app-bg-elevated)] text-[var(--app-fg)]'
+        isSystem ? 'bg-[#ffffff] text-[#62666d]' :
+        'bg-[#ffffff] text-[#0f1011]'
       }`}>
         {isAssistant ? <Bot className="h-3.5 w-3.5" /> :
          isTool ? <Wrench className="h-3.5 w-3.5" /> :
          <User className="h-3.5 w-3.5" />}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-[#62666d]">
           {role}
         </p>
         <div className="mt-1 whitespace-pre-wrap break-words text-[13px] leading-relaxed">
-          {content || <span className="italic text-[var(--app-muted)]">(empty)</span>}
+          {content || <span className="italic text-[#62666d]">(empty)</span>}
         </div>
       </div>
     </div>
@@ -70,43 +70,54 @@ export default async function ThreadDetailPage({
   const meta = (thread.metadata ?? {}) as Record<string, any>;
 
   return (
-    <section className="mx-auto max-w-4xl space-y-6 px-6 py-8" data-testid="thread-detail-page">
-      <header>
-        <Link
-          href={`/agents/${encodeURIComponent(key)}`}
-          className="mb-3 inline-flex items-center gap-1 text-[12px] text-[var(--app-muted)] hover:text-[var(--app-fg)]"
-          data-testid="link-back-agent"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to agent
-        </Link>
-        <h1 className="text-[18px] font-semibold" data-testid="thread-title">
-          Thread {threadId.slice(0, 12)}…
+    <div className="space-y-4" data-testid="thread-detail-page">
+      {/* Header */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <Link href="/agents" className="font-medium hover:text-[#0f1011] transition-colors">Agents</Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <Link
+            href={`/agents/${encodeURIComponent(key)}`}
+            className="hover:text-[#0f1011] transition-colors"
+            data-testid="link-back-agent"
+          >
+            {key}
+          </Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <span>Thread</span>
+        </div>
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]" data-testid="thread-title">
+          Thread <span className="font-mono text-[15px] text-[#8a8f98]">{threadId.slice(0, 12)}…</span>
         </h1>
-        <div className="mt-1 flex items-center gap-3 text-[12px] text-[var(--app-muted)]">
+        <div className="mt-2 flex items-center gap-3 text-[12px] text-[#62666d]">
           <Badge tone={thread.status === 'active' ? 'success' : 'neutral'}>{thread.status}</Badge>
           {thread.channelRef && <span>Channel: {thread.channelRef}</span>}
           <span>{messages.length} messages</span>
           {meta.totalCostUsd != null && <span>Cost: ${Number(meta.totalCostUsd).toFixed(4)}</span>}
           {meta.turnCount != null && <span>{meta.turnCount} turns</span>}
         </div>
-      </header>
+      </div>
 
       {/* Summary */}
       {thread.summary && (
-        <Card data-testid="card-summary">
-          <CardHeader>Compacted Summary</CardHeader>
-          <CardBody>
-            <p className="text-[12px] leading-relaxed text-[var(--app-muted)]">{thread.summary}</p>
-          </CardBody>
-        </Card>
+        <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white" data-testid="card-summary">
+          <div className="border-b border-[#e6e8eb] px-4 py-2.5">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Compacted Summary</h2>
+          </div>
+          <div className="p-4">
+            <p className="text-[12px] leading-relaxed text-[#62666d]">{thread.summary}</p>
+          </div>
+        </div>
       )}
 
       {/* Messages */}
-      <Card data-testid="card-messages">
-        <CardHeader>Messages ({messages.length})</CardHeader>
-        <CardBody>
+      <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white" data-testid="card-messages">
+        <div className="border-b border-[#e6e8eb] px-4 py-2.5">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Messages ({messages.length})</h2>
+        </div>
+        <div className="p-4">
           {messages.length === 0 ? (
-            <p className="py-6 text-center text-[13px] text-[var(--app-muted)]">No messages in this thread.</p>
+            <p className="py-6 text-center text-[13px] text-[#62666d]">No messages in this thread.</p>
           ) : (
             <div className="space-y-4">
               {messages.map((msg: any, i: number) => (
@@ -114,8 +125,8 @@ export default async function ThreadDetailPage({
               ))}
             </div>
           )}
-        </CardBody>
-      </Card>
-    </section>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -22,8 +22,8 @@ export async function registerAgentRoutes(app: FastifyInstance) {
     return skillRegistry.list();
   });
 
-  // GET /v1/object-types — list registered object types for capabilities reference
-  app.get('/v1/object-types', async (request) => {
+  // GET /v1/capabilities/objects — list registered object types for capabilities reference
+  app.get('/v1/capabilities/objects', async (request) => {
     await requireUser(request);
     return Object.entries(objects).map(([name, def]) => ({
       name,
@@ -50,9 +50,11 @@ export async function registerAgentRoutes(app: FastifyInstance) {
       name: def.name,
       description: def.description,
       model: def.model,
+      maxSteps: def.maxSteps ?? 20,
+      triggers: def.defaultTriggers,
+      scopes: def.scopes,
       runCount: runCountMap.get(def.key) ?? 0,
-      capabilityCount: def.capabilities.length,
-      triggerCount: def.defaultTriggers.length,
+      enabled: true,
     }));
   });
 
@@ -68,7 +70,7 @@ export async function registerAgentRoutes(app: FastifyInstance) {
       where: { agentKey: key },
       orderBy: { startedAt: 'desc' },
       take: 10,
-      select: { id: true, trigger: true, status: true, inputData: true, startedAt: true, finishedAt: true },
+      select: { id: true, trigger: true, status: true, startedAt: true, finishedAt: true },
     });
 
     return {
@@ -76,15 +78,31 @@ export async function registerAgentRoutes(app: FastifyInstance) {
       name: def.name,
       description: def.description,
       model: def.model,
-      capabilities: def.capabilities,
-      defaultTriggers: def.defaultTriggers,
-      channelBehavior: def.channelBehavior,
-      compaction: def.compaction,
+      maxSteps: def.maxSteps ?? 20,
+      triggers: def.defaultTriggers,
+      scopes: def.scopes,
+      enabled: true,
       recentRuns,
     };
   });
 
-  // POST /v1/agents/:key/message — manual trigger
+  // POST /v1/agents/:key/enable — enable agent (persisted per-instance in future; no-op for now)
+  app.post('/v1/agents/:key/enable', async (request) => {
+    await requireUser(request);
+    const { key } = request.params as { key: string };
+    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
+    return { ok: true };
+  });
+
+  // POST /v1/agents/:key/disable — disable agent
+  app.post('/v1/agents/:key/disable', async (request) => {
+    await requireUser(request);
+    const { key } = request.params as { key: string };
+    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
+    return { ok: true };
+  });
+
+  // POST /v1/agents/:key/message — queue an agent run
   app.post('/v1/agents/:key/message', async (request) => {
     await requireUser(request);
     const { key } = request.params as { key: string };
@@ -111,6 +129,80 @@ export async function registerAgentRoutes(app: FastifyInstance) {
     });
 
     return { ok: true, message: 'Agent run queued' };
+  });
+
+  // GET /v1/agents/:key/threads — list agent threads (runs with message context)
+  app.get('/v1/agents/:key/threads', async (request) => {
+    await requireUser(request);
+    const { key } = request.params as { key: string };
+    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
+
+    const query = request.query as { cursor?: string; limit?: string };
+    const limit = Math.min(100, parseInt(query.limit ?? '20'));
+
+    const runs = await db.agentRun.findMany({
+      where: { agentKey: key },
+      orderBy: { startedAt: 'desc' },
+      take: limit + 1,
+      select: {
+        id: true,
+        status: true,
+        trigger: true,
+        inputData: true,
+        outputData: true,
+        startedAt: true,
+        finishedAt: true,
+        steps: { select: { id: true, type: true, createdAt: true } },
+      },
+      ...(query.cursor && { cursor: { id: query.cursor }, skip: 1 }),
+    });
+
+    const hasMore = runs.length > limit;
+    const data = hasMore ? runs.slice(0, limit) : runs;
+
+    return {
+      data: data.map((r) => ({
+        id: r.id,
+        status: r.status,
+        channelRef: (r.trigger as Record<string, unknown>)?.channelRef ?? null,
+        messages: r.steps,
+        updatedAt: r.finishedAt ?? r.startedAt,
+      })),
+      nextCursor: hasMore ? data[data.length - 1]?.id : null,
+    };
+  });
+
+  // GET /v1/agents/:key/threads/:threadId — single thread detail
+  app.get('/v1/agents/:key/threads/:threadId', async (request) => {
+    await requireUser(request);
+    const { key, threadId } = request.params as { key: string; threadId: string };
+
+    if (!getAgent(key)) throw new ApiError(404, 'NOT_FOUND', 'Agent not found');
+
+    const run = await db.agentRun.findUnique({
+      where: { id: threadId },
+      include: { steps: { orderBy: { createdAt: 'asc' } } },
+    });
+    if (!run || run.agentKey !== key) throw new ApiError(404, 'NOT_FOUND', 'Thread not found');
+
+    const stepData = run.steps.map((s) => {
+      const data = s.data as Record<string, unknown>;
+      return {
+        role: s.type === 'tool' ? 'tool' : 'assistant',
+        content: data,
+        createdAt: s.createdAt,
+      };
+    });
+
+    return {
+      id: run.id,
+      status: run.status,
+      channelRef: (run.trigger as unknown as Record<string, unknown>)?.channelRef ?? null,
+      messages: stepData,
+      summary: null,
+      metadata: {},
+      updatedAt: run.finishedAt ?? run.startedAt,
+    };
   });
 
   // GET /v1/agents/:key/runs — paginated run list

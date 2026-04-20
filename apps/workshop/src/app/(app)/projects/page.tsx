@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { requirePermission } from '@/lib/auth';
 import { ROUTE_PERMISSIONS } from '@/lib/access';
-import { objectList, objectCount } from '@hq/objects';
-import { createServiceContext } from '@hq/services';
+import { createServiceContext, listProjects, countProjects, countTasks } from '@hq/services';
+import { Button, EmptyState } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,87 +10,80 @@ export default async function ProjectsOverviewPage() {
   const principal = await requirePermission(ROUTE_PERMISSIONS.workshop);
   const ctx = createServiceContext(principal);
 
-  const [projects, totalProjects, totalTasks, blocked, overdue] = await Promise.all([
-    objectList('Project', { limit: 50, sortBy: 'updatedAt', sortDir: 'desc' }, ctx),
-    objectCount('Project', {}, ctx),
-    objectCount('Task', {}, ctx),
-    objectCount('Task', { filters: { status: 'BLOCKED' } }, ctx),
-    // Overdue is a derived count — list filter engine doesn't handle lt natively,
-    // so compute via the task list with due date sort as a shortcut for the card.
-    objectCount('Task', {}, ctx).then(() => 0).catch(() => 0),
+  const [projects, totalProjects, totalTasks, blocked] = await Promise.all([
+    listProjects(ctx, { limit: 50, sortBy: 'updatedAt', sortDir: 'desc' }),
+    countProjects(ctx),
+    countTasks(ctx),
+    countTasks(ctx, { status: 'BLOCKED' }),
   ]);
 
-  const tiles = [
-    { label: 'Projects', value: totalProjects, href: '/objects/Project' },
-    { label: 'Tasks', value: totalTasks, href: '/objects/Task' },
-    { label: 'Blocked', value: blocked, href: '/projects/blocked' },
-    { label: 'Portfolio', value: '→', href: '/projects/portfolio' },
-  ];
-
   return (
-    <div className="flex h-full flex-col" data-testid="projects-overview">
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+    <div className="space-y-4" data-testid="projects-overview">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[18px] font-semibold text-[var(--fg)]">Projects</h1>
-          <p className="mt-0.5 text-[13px] text-[var(--muted)]">
-            Example module — projects and tasks assigned to canonical users.
+          <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+            <span className="font-medium">Home</span>
+            <span className="text-[#d0d6e0]">/</span>
+            <span>Projects</span>
+          </div>
+          <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">Projects</h1>
+          <p className="mt-2 text-[12.5px] text-[#62666d]">
+            Projects and tasks assigned to canonical users.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link
-            href="/objects/Project/new"
-            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px] font-medium text-[var(--fg)] hover:border-[var(--accent)]"
-            data-testid="new-project-link"
-          >
-            New project
-          </Link>
-          <Link
-            href="/objects/Task/new"
-            className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px] font-medium text-[var(--fg)] hover:border-[var(--accent)]"
-            data-testid="new-task-link"
-          >
-            New task
+        <div className="flex shrink-0 gap-2 pt-1">
+          <Link href="/projects/new" data-testid="new-project-link">
+            <Button variant="primary" size="sm">New project</Button>
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 p-6 sm:grid-cols-2 lg:grid-cols-4" data-testid="projects-tiles">
-        {tiles.map((t) => (
+      {/* Stat row */}
+      <div className="flex items-stretch overflow-hidden rounded-lg border border-[#e6e8eb] bg-white" data-testid="projects-tiles">
+        {[
+          { label: 'Projects', value: totalProjects, href: '/projects/portfolio' },
+          { label: 'Tasks', value: totalTasks, href: '/projects/blocked' },
+          { label: 'Blocked', value: blocked, href: '/projects/blocked' },
+          { label: 'Portfolio', value: '→', href: '/projects/portfolio' },
+        ].map((t, i) => (
           <Link
             key={t.label}
             href={t.href}
-            className="flex flex-col rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:border-[var(--accent)]"
+            className={`flex-1 px-4 py-3 hover:bg-[#fafbfb] transition-colors duration-100${i > 0 ? ' border-l border-[#e6e8eb]' : ''}`}
             data-testid={`tile-${t.label.toLowerCase()}`}
           >
-            <span className="text-[12px] font-medium uppercase tracking-wide text-[var(--muted)]">
-              {t.label}
-            </span>
-            <span className="mt-0.5 text-[22px] font-semibold text-[var(--fg)]">{t.value}</span>
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">{t.label}</p>
+            <p className="mt-1 text-[18px] font-semibold leading-none tabular-nums tracking-tight text-[#0f1011]">{t.value}</p>
           </Link>
         ))}
       </div>
 
-      <div className="border-t border-[var(--border)] px-6 py-4">
-        <h2 className="text-[14px] font-semibold text-[var(--fg)]">Recent projects</h2>
-        <ul className="mt-2 divide-y divide-[var(--border)]" data-testid="recent-projects">
-          {projects.items.map((p: any) => (
-            <li key={p.id} className="flex items-center justify-between py-2">
-              <Link
-                href={`/objects/Project/${p.id}`}
-                className="text-[14px] font-medium text-[var(--fg)] hover:underline"
-                data-testid={`project-link-${p.id}`}
-              >
-                {p.name}
-              </Link>
-              <span className="text-[12px] uppercase tracking-wide text-[var(--muted)]">
-                {p.status}
-              </span>
-            </li>
-          ))}
-          {projects.items.length === 0 && (
-            <li className="py-4 text-[13px] text-[var(--muted)]">No projects yet.</li>
+      {/* Recent projects */}
+      <div>
+        <div className="mb-2.5 flex items-baseline gap-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Recent projects</h2>
+          <p className="text-[11px] text-[#8a8f98]">&mdash; {projects.items.length} latest</p>
+        </div>
+        <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+          {projects.items.length === 0 ? (
+            <EmptyState title="No projects yet" action={<Link href="/projects/new"><Button variant="primary" size="sm">New project</Button></Link>} />
+          ) : (
+            <div className="divide-y divide-[#eff0f2]" data-testid="recent-projects">
+              {projects.items.map((p: any) => (
+                <Link
+                  key={p.id}
+                  href={`/projects/${p.id}`}
+                  className="group flex h-11 items-center justify-between gap-3 px-4 hover:bg-[#fafbfb] transition-colors duration-100"
+                  data-testid={`project-link-${p.id}`}
+                >
+                  <span className="text-[12.5px] font-medium text-[#0f1011]">{p.name}</span>
+                  <span className="text-[11px] uppercase tracking-[0.04em] text-[#8a8f98]">{p.status}</span>
+                </Link>
+              ))}
+            </div>
           )}
-        </ul>
+        </div>
       </div>
     </div>
   );

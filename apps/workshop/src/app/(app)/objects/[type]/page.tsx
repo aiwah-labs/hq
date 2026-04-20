@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/auth';
 import { ROUTE_PERMISSIONS } from '@/lib/access';
 import { getObjectSchema, getListFields, objects, objectList, type ListParams } from '@hq/objects';
 import { createServiceContext } from '@hq/services';
+import { Button } from '@/components/ui';
 import { ObjectTable } from '@/components/objects/object-table';
 import { ObjectFilterBar } from '@/components/objects/object-filter-bar';
 
@@ -50,58 +51,54 @@ export default async function ObjectListPage({ params, searchParams }: Props) {
   const filterableFields = schema.fields.filter((f) => f.filterable);
 
   return (
-    <div className="flex h-full flex-col" data-testid={`object-list-${type}`}>
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
+    <div className="space-y-4" data-testid={`object-list-${type}`}>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[18px] font-semibold text-[var(--fg)]">{schema.pluralLabel}</h1>
-          <p className="mt-0.5 text-[13px] text-[var(--muted)]">
+          <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+            <span className="font-medium">Home</span>
+            <span className="text-[#d0d6e0]">/</span>
+            <span>{schema.pluralLabel}</span>
+          </div>
+          <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">{schema.pluralLabel}</h1>
+          <p className="mt-2 text-[12.5px] text-[#62666d]">
             {items.length} {items.length === 1 ? 'record' : 'records'}
             {listParams.q ? ` matching "${listParams.q}"` : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 pt-1">
           <a
             href={`/objects/${type}/export?format=csv${listParams.q ? `&q=${encodeURIComponent(listParams.q)}` : ''}`}
-            className="rounded-md border border-divider bg-[var(--app-bg-elevated)] px-3 py-1.5 text-[13px] font-medium text-[var(--app-fg)] hover:bg-[var(--app-input-bg)]"
             data-testid={`object-export-${type}`}
           >
-            Export CSV
+            <Button variant="outline" size="sm">Export CSV</Button>
           </a>
-          <Link
-            href={`/objects/${type}/import`}
-            className="rounded-md border border-divider bg-[var(--app-bg-elevated)] px-3 py-1.5 text-[13px] font-medium text-[var(--app-fg)] hover:bg-[var(--app-input-bg)]"
-            data-testid={`object-import-link-${type}`}
-          >
-            Import
+          <Link href={`/objects/${type}/import`} data-testid={`object-import-link-${type}`}>
+            <Button variant="outline" size="sm">Import</Button>
           </Link>
-          <Link
-            href={`/objects/${type}/new`}
-            className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-[13px] font-medium text-white"
-          >
-            New {schema.label}
+          <Link href={`/objects/${type}/new`}>
+            <Button variant="primary" size="sm">New {schema.label}</Button>
           </Link>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 p-6">
-        <ObjectFilterBar schema={schema} filterableFields={filterableFields} />
-        <ObjectTable
-          schema={schema}
-          listFields={listFields}
-          rows={items as Array<Record<string, unknown>>}
-          emptyHref={`/objects/${type}/new`}
-        />
-        {nextCursor && (
-          <div className="flex justify-center">
-            <Link
-              href={`/objects/${type}?cursor=${encodeURIComponent(nextCursor)}${listParams.q ? `&q=${encodeURIComponent(listParams.q)}` : ''}`}
-              className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px]"
-            >
-              Load more
-            </Link>
-          </div>
-        )}
-      </div>
+      <ObjectFilterBar schema={schema} filterableFields={filterableFields} />
+      <ObjectTable
+        schema={schema}
+        listFields={listFields}
+        rows={items as Array<Record<string, unknown>>}
+        emptyHref={`/objects/${type}/new`}
+      />
+      {nextCursor && (
+        <div className="flex justify-center">
+          <Link
+            href={`/objects/${type}?cursor=${encodeURIComponent(nextCursor)}${listParams.q ? `&q=${encodeURIComponent(listParams.q)}` : ''}`}
+            className="rounded-md border border-[#e6e8eb] bg-white px-3 py-1.5 text-[13px] text-[#62666d] hover:bg-[#fafbfb] transition-colors"
+          >
+            Load more
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

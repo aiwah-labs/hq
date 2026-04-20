@@ -103,6 +103,7 @@ export async function resolveAuth(input: ResolveAuthInput): Promise<AuthContext>
   }
 
   const sessionToken = readCookie(input.cookieHeader, SESSION_COOKIE_NAME);
+  if (!sessionToken) return { kind: 'none' };
   const session = await validateSession(sessionToken);
 
   if (!session) {

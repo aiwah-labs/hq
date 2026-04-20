@@ -4,5 +4,5 @@ import { ROUTE_PERMISSIONS } from '@/lib/access';
 
 export default async function WorkshopPage() {
   await requirePermission(ROUTE_PERMISSIONS.workshop);
-  redirect('/content');
+  redirect('/dashboard');
 }

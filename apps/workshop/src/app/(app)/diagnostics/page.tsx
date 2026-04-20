@@ -51,31 +51,31 @@ export default async function DiagnosticsPage() {
   ]);
 
   return (
-    <div className="space-y-8 p-6" data-testid="diagnostics-page">
+    <div className="space-y-4" data-testid="diagnostics-page">
       <div>
-        <h1 className="text-[20px] font-semibold text-[var(--fg)]">Diagnostics</h1>
-        <p className="mt-1 text-[13px] text-[var(--muted)]">
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">Diagnostics</h1>
+        <p className="mt-1 text-[13px] text-[#62666d]">
           System health, environment configuration, and recent failures.
         </p>
       </div>
 
       {/* Health */}
       <section data-testid="health-section">
-        <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-[var(--muted)]">Health</h2>
-        <div className="flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+        <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Health</h2>
+        <div className="flex items-center gap-3 rounded-md border border-[#e6e8eb] bg-[#ffffff] px-4 py-3">
           <StatusBadge ok={health.ok} />
-          <span className="text-[13px] text-[var(--fg)]">
+          <span className="text-[13px] text-[#0f1011]">
             {health.ok ? 'All critical systems operational' : 'One or more systems degraded'}
           </span>
-          <span className="ml-auto font-mono text-[11px] text-[var(--muted)]">{health.timestamp}</span>
+          <span className="ml-auto font-mono text-[11px] text-[#62666d]">{health.timestamp}</span>
         </div>
-        <ol className="mt-2 divide-y divide-[var(--border)] rounded-md border border-[var(--border)] bg-[var(--surface)]">
+        <ol className="mt-2 divide-y divide-[#e6e8eb] rounded-md border border-[#e6e8eb] bg-[#ffffff]">
           {health.dependencies.map((dep) => (
             <li key={dep.name} className="flex items-start gap-3 px-4 py-3" data-testid={`dep-${dep.name}`}>
               <StatusBadge ok={dep.ok} />
               <div>
-                <span className="font-mono text-[13px] text-[var(--fg)]">{dep.name}</span>
-                {dep.message ? <p className="mt-0.5 text-[12px] text-[var(--muted)]">{dep.message}</p> : null}
+                <span className="font-mono text-[13px] text-[#0f1011]">{dep.name}</span>
+                {dep.message ? <p className="mt-0.5 text-[12px] text-[#62666d]">{dep.message}</p> : null}
               </div>
             </li>
           ))}
@@ -85,14 +85,14 @@ export default async function DiagnosticsPage() {
       {/* Env warnings */}
       {envWarnings.length > 0 ? (
         <section data-testid="env-warnings-section">
-          <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-[var(--muted)]">Environment Warnings</h2>
-          <ol className="divide-y divide-[var(--border)] rounded-md border border-[var(--border)] bg-[var(--surface)]">
+          <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Environment Warnings</h2>
+          <ol className="divide-y divide-[#e6e8eb] rounded-md border border-[#e6e8eb] bg-[#ffffff]">
             {envWarnings.map((w) => (
               <li key={w.key} className="flex items-start gap-3 px-4 py-3">
                 <SeverityBadge severity={w.severity} />
                 <div>
-                  <span className="font-mono text-[13px] text-[var(--fg)]">{w.key}</span>
-                  <p className="mt-0.5 text-[12px] text-[var(--muted)]">{w.message}</p>
+                  <span className="font-mono text-[13px] text-[#0f1011]">{w.key}</span>
+                  <p className="mt-0.5 text-[12px] text-[#62666d]">{w.message}</p>
                 </div>
               </li>
             ))}
@@ -102,7 +102,7 @@ export default async function DiagnosticsPage() {
 
       {/* Recent failures */}
       <section data-testid="recent-failures-section">
-        <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-[var(--muted)]">Recent Failures</h2>
+        <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Recent Failures</h2>
         <div className="space-y-4">
           {([
             { label: 'Actions', items: failedActions, getLabel: (r: any) => r.actionName, getDetail: (r: any) => r.error, getTime: (r: any) => r.startedAt },
@@ -110,20 +110,20 @@ export default async function DiagnosticsPage() {
             { label: 'Agent Threads', items: failedAgents, getLabel: (r: any) => r.agentKey, getDetail: (r: any) => r.lastTurnStatus, getTime: (r: any) => r.updatedAt },
           ] as const).map(({ label, items, getLabel, getDetail, getTime }) => (
             <div key={label}>
-              <h3 className="mb-1 text-[12px] font-medium text-[var(--muted)]">{label}</h3>
+              <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">{label}</h3>
               {items.length === 0 ? (
-                <p className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[13px] text-[var(--muted)]">No recent failures.</p>
+                <p className="rounded-md border border-[#e6e8eb] bg-[#ffffff] px-4 py-3 text-[13px] text-[#62666d]">No recent failures.</p>
               ) : (
-                <ol className="divide-y divide-[var(--border)] rounded-md border border-[var(--border)] bg-[var(--surface)]">
+                <ol className="divide-y divide-[#e6e8eb] rounded-md border border-[#e6e8eb] bg-[#ffffff]">
                   {items.map((row) => (
                     <li key={(row as any).id} className="flex items-start gap-3 px-4 py-3">
                       <span className="mt-0.5 rounded bg-red-500/10 px-2 py-0.5 font-mono text-[11px] text-red-400">FAIL</span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="truncate font-mono text-[12px] text-[var(--fg)]">{getLabel(row)}</span>
-                          <span className="shrink-0 font-mono text-[11px] text-[var(--muted)]">{new Date(getTime(row)).toLocaleString()}</span>
+                          <span className="truncate font-mono text-[12px] text-[#0f1011]">{getLabel(row)}</span>
+                          <span className="shrink-0 font-mono text-[11px] text-[#62666d]">{new Date(getTime(row)).toLocaleString()}</span>
                         </div>
-                        {getDetail(row) ? <p className="mt-0.5 truncate text-[12px] text-[var(--muted)]">{getDetail(row)}</p> : null}
+                        {getDetail(row) ? <p className="mt-0.5 truncate text-[12px] text-[#62666d]">{getDetail(row)}</p> : null}
                       </div>
                     </li>
                   ))}

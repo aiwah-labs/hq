@@ -9,19 +9,19 @@ interface Props {
 export function ObjectEmptyState({ schema, href }: Props) {
   return (
     <div
-      className="flex flex-col items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-[var(--surface-muted)] px-6 py-12 text-center"
+      className="flex flex-col items-center justify-center rounded-md border border-dashed border-[#e6e8eb] bg-[var(--surface-muted)] px-6 py-12 text-center"
       data-testid={`object-empty-${schema.type}`}
     >
-      <p className="text-[14px] font-medium text-[var(--fg)]">
+      <p className="text-[14px] font-medium text-[#0f1011]">
         No {schema.pluralLabel.toLowerCase()} yet
       </p>
-      <p className="mt-1 text-[13px] text-[var(--muted)]">
+      <p className="mt-1 text-[13px] text-[#62666d]">
         Add your first {schema.label.toLowerCase()} to start populating this view.
       </p>
       {href && (
         <Link
           href={href}
-          className="mt-4 inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[13px] font-medium text-[var(--fg)] hover:border-[var(--accent)]"
+          className="mt-4 inline-flex items-center rounded-md border border-[#e6e8eb] bg-[#ffffff] px-3 py-1.5 text-[13px] font-medium text-[#0f1011] hover:border-[#009E85]"
         >
           Create {schema.label}
         </Link>

@@ -62,7 +62,6 @@ export const ROUTE_PERMISSIONS = {
   settings: PERMISSIONS.settingsView,
   users: PERMISSIONS.usersView,
   bots: PERMISSIONS.botsView,
-  messaging: PERMISSIONS.messagingView,
   agents: PERMISSIONS.agentsView,
   workflows: PERMISSIONS.workflowsView,
   approvals: PERMISSIONS.approvalsView,

@@ -20,28 +20,28 @@ export default async function ImportObjectPage({ params }: Props) {
   await requirePermission(PERMISSIONS.workshopView);
 
   return (
-    <div className="flex h-full flex-col" data-testid={`object-import-${type}`}>
-      <div className="flex items-center justify-between border-b border-divider px-6 py-4">
-        <div>
-          <h1 className="text-[18px] font-semibold text-[var(--app-fg)]">
-            Import {schema.pluralLabel}
-          </h1>
-          <p className="mt-0.5 text-[13px] text-[var(--app-muted)]">
-            Upload a CSV or JSON file, preview validation, then commit.
-          </p>
+    <div className="space-y-4" data-testid={`object-import-${type}`}>
+      {/* Header */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <span className="font-medium">Home</span>
+          <span className="text-[#d0d6e0]">/</span>
+          <Link href={`/objects/${type}`} className="hover:text-[#0f1011] transition-colors">{schema.pluralLabel}</Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <span>Import</span>
         </div>
-        <Link
-          href={`/objects/${type}`}
-          className="text-[13px] text-[var(--app-muted)] hover:text-[var(--app-fg)]"
-        >
-          Back to {schema.pluralLabel}
-        </Link>
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">
+          Import {schema.pluralLabel}
+        </h1>
+        <p className="mt-2 text-[12.5px] text-[#62666d]">
+          Upload a CSV or JSON file, preview validation, then commit.
+        </p>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl p-6">
-        <div className="mb-5 rounded-md border border-divider bg-[var(--app-bg-elevated)] p-4 text-[13px] text-[var(--app-muted)]">
-          <p className="mb-1 font-medium text-[var(--app-fg)]">Supported fields</p>
-          <p className="font-mono text-[12px]">
+      <div className="mx-auto w-full max-w-3xl space-y-4">
+        <div className="rounded-lg border border-[#e6e8eb] bg-white p-4 text-[13px] text-[#62666d]">
+          <p className="mb-1 text-[12.5px] font-medium text-[#0f1011]">Supported fields</p>
+          <p className="font-mono text-[11px]">
             {schema.fields
               .filter((f) => !f.readonly && f.type !== 'relation')
               .map((f) => f.name)

@@ -16,6 +16,9 @@ export type NodeType =
 export interface NodeAnnotation {
   label: string;
   description?: string;
+  icon?: string;
+  color?: string;
+  category?: string;
 }
 
 export interface RetryPolicy {

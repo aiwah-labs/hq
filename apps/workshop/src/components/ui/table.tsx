@@ -10,7 +10,7 @@ export function Table({ className, ...props }: TableHTMLAttributes<HTMLTableElem
 }
 
 export function THead({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn('border-b border-divider/90 bg-[var(--app-bg)] text-[var(--app-muted)]', className)} {...props} />;
+  return <thead className={cn('border-b border-divider/90 bg-[var(--app-bg)] text-[#62666d]', className)} {...props} />;
 }
 
 export function TBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
@@ -31,5 +31,5 @@ export function TD({ className, ...props }: TdHTMLAttributes<HTMLTableCellElemen
 }
 
 export function TR({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn('border-b border-divider/70', className)} {...props} />;
+  return <tr className={cn('border-b border-[#eff0f2]', className)} {...props} />;
 }

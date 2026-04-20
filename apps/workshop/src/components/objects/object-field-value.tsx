@@ -26,7 +26,7 @@ function formatPercent(v: unknown): string {
 
 export function ObjectFieldValue({ field, value }: Props) {
   if (value === null || value === undefined || value === '') {
-    return <span className="text-[var(--muted)]">—</span>;
+    return <span className="text-[#62666d]">—</span>;
   }
 
   if (field.type === 'boolean') {
@@ -47,7 +47,7 @@ export function ObjectFieldValue({ field, value }: Props) {
 
   if (field.format === 'email' && typeof value === 'string') {
     return (
-      <a href={`mailto:${value}`} className="text-[var(--accent)] hover:underline">
+      <a href={`mailto:${value}`} className="text-[#009E85] hover:underline">
         {value}
       </a>
     );
@@ -55,7 +55,7 @@ export function ObjectFieldValue({ field, value }: Props) {
 
   if (field.format === 'url' && typeof value === 'string') {
     return (
-      <a href={value} target="_blank" rel="noreferrer" className="text-[var(--accent)] hover:underline">
+      <a href={value} target="_blank" rel="noreferrer" className="text-[#009E85] hover:underline">
         {value}
       </a>
     );
@@ -63,7 +63,7 @@ export function ObjectFieldValue({ field, value }: Props) {
 
   if (field.type === 'enum') {
     return (
-      <span className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-1.5 py-0.5 text-[11px] font-medium">
+      <span className="inline-flex items-center rounded-md border border-[#e6e8eb] bg-[var(--surface-muted)] px-1.5 py-0.5 text-[11px] font-medium">
         {String(value)}
       </span>
     );
@@ -71,7 +71,7 @@ export function ObjectFieldValue({ field, value }: Props) {
 
   if (field.type === 'json') {
     return (
-      <code className="text-[11px] text-[var(--muted)]">
+      <code className="text-[11px] text-[#62666d]">
         {typeof value === 'string' ? value : JSON.stringify(value)}
       </code>
     );

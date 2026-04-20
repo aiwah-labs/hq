@@ -24,7 +24,7 @@ export function CollapsibleSection({ label, children, defaultOpen = false }: Col
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="text-[12px] text-[var(--app-muted)] hover:text-[var(--app-fg)] transition-colors"
+              className="text-[12px] text-[#62666d] hover:text-[#0f1011] transition-colors"
             >
               Cancel
             </button>

@@ -1,23 +1,34 @@
 import { db } from '@hq/db';
 import Link from 'next/link';
 import { requireAuth } from '@/lib/auth';
+import { Button, Badge, EmptyState } from '@/components/ui';
 import { markReadAction, archiveAction, markAllReadAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
-function TypeBadge({ type }: { type: string }) {
-  const colorMap: Record<string, string> = {
-    task_assigned: 'bg-blue-500/15 text-blue-400',
-    approval_requested: 'bg-amber-500/15 text-amber-400',
-    workflow_failed: 'bg-red-500/15 text-red-400',
-    agent_handoff: 'bg-purple-500/15 text-purple-400',
-    mention: 'bg-teal-500/15 text-teal-400',
-  };
-  return (
-    <span className={`inline-flex items-center rounded px-2 py-0.5 font-mono text-[11px] font-semibold ${colorMap[type] ?? 'bg-neutral-500/15 text-neutral-400'}`}>
-      {type.replace(/_/g, ' ')}
-    </span>
-  );
+const typeLabels: Record<string, string> = {
+  task_assigned: 'Task',
+  approval_requested: 'Approval',
+  workflow_failed: 'Failure',
+  agent_handoff: 'Handoff',
+  mention: 'Mention',
+};
+
+const typeTone: Record<string, 'neutral' | 'indigo' | 'warn' | 'danger' | 'teal'> = {
+  task_assigned: 'indigo',
+  approval_requested: 'warn',
+  workflow_failed: 'danger',
+  agent_handoff: 'teal',
+  mention: 'neutral',
+};
+
+function formatDate(d: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  if (diffMs < 60_000) return 'just now';
+  if (diffMs < 3_600_000) return `${Math.floor(diffMs / 60_000)}m ago`;
+  if (diffMs < 86_400_000) return `${Math.floor(diffMs / 3_600_000)}h ago`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export default async function InboxPage() {
@@ -32,82 +43,114 @@ export default async function InboxPage() {
   const unreadCount = items.filter((i) => i.status === 'UNREAD').length;
 
   return (
-    <div className="space-y-6 p-6" data-testid="inbox-page">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4" data-testid="inbox-page">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-semibold text-[var(--fg)]">
-            Inbox
-            {unreadCount > 0 ? (
-              <span className="ml-2 rounded-full bg-[var(--color-brand-teal)] px-2 py-0.5 text-[11px] font-semibold text-white">
-                {unreadCount}
-              </span>
-            ) : null}
-          </h1>
-          <p className="mt-1 text-[13px] text-[var(--muted)]">Assignments, approvals, and alerts that need your attention.</p>
+          <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+            <span className="font-medium">Home</span>
+            <span className="text-[#d0d6e0]">/</span>
+            <span>Inbox</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">
+              Inbox
+            </h1>
+            {unreadCount > 0 && (
+              <Badge tone="indigo" className="tabular-nums">{unreadCount}</Badge>
+            )}
+          </div>
+          <p className="mt-2 text-[12.5px] text-[#62666d]">
+            Assignments, approvals, and alerts that need your attention.
+          </p>
         </div>
-        {unreadCount > 0 ? (
-          <form action={markAllReadAction}>
-            <button
-              type="submit"
-              className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[12px] text-[var(--fg)] hover:bg-white/5"
-              data-testid="mark-all-read-btn"
-            >
+        {unreadCount > 0 && (
+          <form action={markAllReadAction} className="shrink-0 pt-1">
+            <Button type="submit" variant="outline" size="xs" data-testid="mark-all-read-btn">
               Mark all read
-            </button>
+            </Button>
           </form>
-        ) : null}
+        )}
       </div>
 
+      {/* List */}
       {items.length === 0 ? (
-        <div className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-6 py-8 text-center" data-testid="inbox-empty">
-          <p className="text-[14px] text-[var(--fg)]">All caught up</p>
-          <p className="mt-1 text-[13px] text-[var(--muted)]">No unread items.</p>
+        <div className="rounded-lg border border-[#e6e8eb] bg-white">
+          <EmptyState
+            title="All caught up"
+            description="No unread items in your inbox."
+            data-testid="inbox-empty"
+          />
         </div>
       ) : (
-        <ol className="divide-y divide-[var(--border)] rounded-md border border-[var(--border)] bg-[var(--surface)]" data-testid="inbox-list">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className={`flex items-start gap-4 px-4 py-4 ${item.status === 'UNREAD' ? 'bg-white/[0.02]' : ''}`}
-              data-testid={`inbox-item-${item.id}`}
-            >
-              {item.status === 'UNREAD' && (
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--color-brand-teal)]" aria-label="Unread" />
-              )}
-              {item.status !== 'UNREAD' && <span className="mt-1.5 h-2 w-2 shrink-0" />}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-0.5">
-                    <TypeBadge type={item.type} />
-                    <p className="mt-1 font-medium text-[13px] text-[var(--fg)]">{item.title}</p>
-                    {item.body ? <p className="text-[12px] text-[var(--muted)]">{item.body}</p> : null}
-                  </div>
-                  <span className="shrink-0 font-mono text-[11px] text-[var(--muted)]">
-                    {new Date(item.createdAt).toLocaleString()}
-                  </span>
+        <ol
+          className="overflow-hidden divide-y divide-[#eff0f2] rounded-lg border border-[#e6e8eb] bg-white"
+          data-testid="inbox-list"
+        >
+          {items.map((item) => {
+            const isUnread = item.status === 'UNREAD';
+            return (
+              <li
+                key={item.id}
+                className={`group flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[#fafbfb]${isUnread ? ' bg-[#fafbfb]' : ''}`}
+                data-testid={`inbox-item-${item.id}`}
+              >
+                {/* Unread dot — fixed-width container keeps read items aligned */}
+                <div className="mt-1.5 h-1.5 w-1.5 shrink-0">
+                  {isUnread && (
+                    <span className="block h-1.5 w-1.5 rounded-full bg-[#009E85]" aria-label="Unread" />
+                  )}
                 </div>
-                <div className="mt-2 flex items-center gap-3">
-                  {item.actionUrl ? (
-                    <Link href={item.actionUrl} className="text-[12px] text-[var(--color-brand-teal)] hover:underline">
-                      View →
-                    </Link>
-                  ) : null}
-                  {item.status === 'UNREAD' ? (
-                    <form action={markReadAction.bind(null, item.id)}>
-                      <button type="submit" className="text-[12px] text-[var(--muted)] hover:text-[var(--fg)]">
-                        Mark read
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <Badge tone={typeTone[item.type] ?? 'neutral'}>
+                        {typeLabels[item.type] ?? item.type.replace(/_/g, ' ')}
+                      </Badge>
+                      <p className="text-[12.5px] font-medium text-[#0f1011]">{item.title}</p>
+                      {item.body && (
+                        <p className="text-[12px] text-[#62666d]">{item.body}</p>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-[11px] tabular-nums text-[#8a8f98]">
+                      {formatDate(new Date(item.createdAt))}
+                    </span>
+                  </div>
+
+                  {/* Actions — archive is hover-revealed, primary actions always visible */}
+                  <div className="mt-2 flex items-center gap-3">
+                    {item.actionUrl && (
+                      <Link
+                        href={item.actionUrl}
+                        className="text-[12px] font-medium text-[#009E85] hover:text-[#007A66] transition-colors"
+                      >
+                        View →
+                      </Link>
+                    )}
+                    {isUnread && (
+                      <form action={markReadAction.bind(null, item.id)}>
+                        <button
+                          type="submit"
+                          className="text-[12px] text-[#8a8f98] hover:text-[#3d4149] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009E85]/40 focus-visible:ring-offset-1"
+                        >
+                          Mark read
+                        </button>
+                      </form>
+                    )}
+                    <form action={archiveAction.bind(null, item.id)}>
+                      <button
+                        type="submit"
+                        className="text-[12px] text-[#8a8f98] hover:text-[#3d4149] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009E85]/40 focus-visible:ring-offset-1 opacity-0 group-hover:opacity-100"
+                      >
+                        Archive
                       </button>
                     </form>
-                  ) : null}
-                  <form action={archiveAction.bind(null, item.id)}>
-                    <button type="submit" className="text-[12px] text-[var(--muted)] hover:text-[var(--fg)]">
-                      Archive
-                    </button>
-                  </form>
+                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
       )}
     </div>

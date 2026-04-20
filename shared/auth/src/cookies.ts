@@ -1,5 +1,9 @@
-export const SESSION_COOKIE_NAME = 'aiwah_session';
-export const THEME_COOKIE_NAME = 'aiwah_theme';
+// CUSTOMIZE: set `COOKIE_PREFIX` env var (e.g. `acme`) to rebrand cookies.
+// Defaults to `hq`. Changing in production invalidates existing sessions.
+const COOKIE_PREFIX = process.env.COOKIE_PREFIX?.trim() || 'hq';
+
+export const SESSION_COOKIE_NAME = `${COOKIE_PREFIX}_session`;
+export const THEME_COOKIE_NAME = `${COOKIE_PREFIX}_theme`;
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 

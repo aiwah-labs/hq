@@ -51,7 +51,7 @@ export function IntegrationCard({ def, connections }: Props) {
 
   return (
     <div
-      className="rounded-[8px] border border-[var(--app-border)] bg-[var(--app-bg-elevated)] p-4"
+      className="rounded-[8px] border border-[#e6e8eb] bg-[#ffffff] p-4"
       data-testid={`integration-${def.key}`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -60,26 +60,26 @@ export function IntegrationCard({ def, connections }: Props) {
             <img
               src={def.icon}
               alt=""
-              className="mt-0.5 h-8 w-8 rounded-[6px] border border-[var(--app-border)] bg-white object-contain p-1"
+              className="mt-0.5 h-8 w-8 rounded-[6px] border border-[#e6e8eb] bg-white object-contain p-1"
             />
           ) : (
-            <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-[6px] border border-[var(--app-border)] bg-[var(--app-input-bg)] font-mono text-[11px] uppercase text-[var(--app-muted)]">
+            <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-[6px] border border-[#e6e8eb] bg-[#ffffff] font-mono text-[11px] uppercase text-[#62666d]">
               {def.key.slice(0, 2)}
             </div>
           )}
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-[14px] font-medium text-[var(--app-fg)]">{def.name}</p>
+              <p className="text-[14px] font-medium text-[#0f1011]">{def.name}</p>
               <Badge tone="teal">{def.scope}</Badge>
               <Badge tone="neutral">{def.authKind === 'oauth' ? 'OAuth' : 'API key'}</Badge>
             </div>
-            <p className="mt-0.5 text-[12px] text-[var(--app-muted)]">{def.description}</p>
+            <p className="mt-0.5 text-[12px] text-[#62666d]">{def.description}</p>
             {def.docsUrl ? (
               <a
                 href={def.docsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-block text-[11px] text-[var(--app-muted)] underline-offset-2 hover:underline"
+                className="mt-1 inline-block text-[11px] text-[#62666d] underline-offset-2 hover:underline"
               >
                 Provider docs ↗
               </a>
@@ -103,7 +103,7 @@ export function IntegrationCard({ def, connections }: Props) {
       </div>
 
       {open ? (
-        <div className="mt-3 rounded-[6px] border border-[var(--app-border)] bg-[var(--app-bg)] p-3">
+        <div className="mt-3 rounded-[6px] border border-[#e6e8eb] bg-[var(--app-bg)] p-3">
           {def.authKind === 'oauth' ? (
             <OAuthConnectForm
               integrationKey={def.key}
@@ -133,14 +133,14 @@ export function IntegrationCard({ def, connections }: Props) {
           {connections.map((c) => (
             <li
               key={c.id}
-              className="flex items-center justify-between rounded-[6px] border border-[var(--app-border)] bg-[var(--app-bg)] px-3 py-2"
+              className="flex items-center justify-between rounded-[6px] border border-[#e6e8eb] bg-[var(--app-bg)] px-3 py-2"
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-medium text-[var(--app-fg)]">{c.label}</span>
+                  <span className="text-[13px] font-medium text-[#0f1011]">{c.label}</span>
                   <Badge tone={c.status === 'ACTIVE' ? 'success' : 'danger'}>{c.status}</Badge>
                 </div>
-                <p className="text-[11px] text-[var(--app-muted)]">
+                <p className="text-[11px] text-[#62666d]">
                   {c.lastUsedAt ? `Last used ${new Date(c.lastUsedAt).toLocaleString()}` : 'Not yet used'}
                   {c.allowedUserIds.length + c.allowedRoles.length > 0
                     ? ` · ACL (${c.allowedUserIds.length + c.allowedRoles.length})`

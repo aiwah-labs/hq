@@ -6,10 +6,11 @@ import { registerObjectRoutes } from './objects';
 import { registerActionRoutes } from './actions';
 import { registerApprovalRoutes } from './approvals';
 import { registerActivityRoutes } from './activity';
-// import { registerMessagingRoutes } from './messaging'; // TODO: rewrite for simplified MsgThread/MsgMessage schema
 import { registerAgentRoutes } from './agents';
 import { registerWorkflowRoutes } from './workflows';
 import { registerNotesRoutes } from './notes';
+import { registerProjectsRoutes } from './projects';
+import { registerTasksRoutes } from './tasks';
 import { registerInboxRoutes } from './inbox';
 import { registerIntegrationRoutes } from './integrations';
 import { registerFilesRoutes } from './files';
@@ -22,10 +23,11 @@ export async function registerV1Routes(app: FastifyInstance) {
   await registerActionRoutes(app);
   await registerApprovalRoutes(app);
   await registerActivityRoutes(app);
-  // await registerMessagingRoutes(app);
   await registerAgentRoutes(app);
   await registerWorkflowRoutes(app);
   await registerNotesRoutes(app);
+  await registerProjectsRoutes(app);
+  await registerTasksRoutes(app);
   await registerInboxRoutes(app);
   await registerIntegrationRoutes(app);
   await registerFilesRoutes(app);

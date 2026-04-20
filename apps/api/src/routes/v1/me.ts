@@ -45,7 +45,7 @@ export async function registerMeRoute(app: FastifyInstance) {
     };
   });
 
-  // User search — used by messaging modal to find users to DM/add to group
+  // User search
   app.get('/v1/users', async (request) => {
     await requireAuth(request);
     const { q, limit = '20' } = request.query as { q?: string; limit?: string };

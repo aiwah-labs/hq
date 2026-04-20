@@ -84,6 +84,20 @@ export async function createNote(ctx: ServiceContext, input: CreateNoteInput) {
     throw new Error('Title must be 300 characters or fewer.');
   }
 
+  const actor = ctx.actor;
+  let authorType: string;
+  let authorId: string;
+  if (actor.kind === 'user') {
+    authorType = 'USER';
+    authorId = actor.userId;
+  } else if (actor.kind === 'bot') {
+    authorType = 'BOT';
+    authorId = actor.botSlug;
+  } else {
+    authorType = 'AGENT';
+    authorId = actor.agentKey;
+  }
+
   return ctx.dbClient.note.create({
     data: {
       title: input.title,
@@ -91,6 +105,8 @@ export async function createNote(ctx: ServiceContext, input: CreateNoteInput) {
       tags: input.tags ?? [],
       slug: input.slug ?? null,
       isPinned: input.isPinned ?? false,
+      authorType,
+      authorId,
     },
   });
 }

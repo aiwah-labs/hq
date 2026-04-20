@@ -59,7 +59,7 @@ export function ExecutionSidebar({ workflowKey, workflowName, runs, activeRunId 
   const router = useRouter();
 
   return (
-    <div className="flex h-full w-[220px] shrink-0 flex-col border-r border-divider bg-[var(--app-surface)]" data-testid="execution-sidebar">
+    <div className="flex h-full w-[220px] shrink-0 flex-col border-r border-divider bg-[#ffffff]" data-testid="execution-sidebar">
       {/* Header */}
       <div className="shrink-0 border-b border-divider px-3 py-2.5">
         <button
@@ -88,7 +88,7 @@ export function ExecutionSidebar({ workflowKey, workflowName, runs, activeRunId 
               onClick={() => router.push(`/workflows/${encodeURIComponent(workflowKey)}/runs/${run.id}`)}
               className={cn(
                 'w-full text-left px-3 py-2 border-b border-divider/50 transition-colors',
-                isActive ? 'bg-brand-teal/5 border-l-2 border-l-brand-teal' : 'hover:bg-surface-alt/40'
+                isActive ? 'bg-brand-teal/5 border-l-2 border-l-brand-teal' : 'hover:bg-[#f7f8f8]'
               )}
               data-testid={`sidebar-run-${run.id}`}
             >

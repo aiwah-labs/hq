@@ -83,7 +83,7 @@ At runtime, `resolveObjectPermissions(def)` returns the fully-resolved shape; `g
 
 ## Ownership
 
-Ownership is opt-in per object. When configured, `recordBelongsToUser(record, userId, ownership)` returns `true` if any of the configured fields on the record match the user. The fields are a flat list — `ownerField`, `assigneeField`, then each name in `extraFields`. This keeps "did Abil create this?", "was it assigned to Kifil?", and "did Kifil leave a comment?" checkable from one place.
+Ownership is opt-in per object. When configured, `recordBelongsToUser(record, userId, ownership)` returns `true` if any of the configured fields on the record match the user. The fields are a flat list — `ownerField`, `assigneeField`, then each name in `extraFields`. This keeps "did Alice create this?", "was it assigned to Bob?", and "did Bob leave a comment?" checkable from one place.
 
 The CRUD runtime (`shared/objects/src/crud.ts`) calls this automatically:
 

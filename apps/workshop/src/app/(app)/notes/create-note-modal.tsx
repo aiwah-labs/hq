@@ -74,7 +74,7 @@ export function CreateNoteModal() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded-[6px] px-3 py-1.5 text-[13px] text-[var(--muted)] hover:text-[var(--fg)]"
+            className="rounded-[6px] px-3 py-1.5 text-[13px] text-[#62666d] hover:text-[#0f1011]"
           >
             Cancel
           </button>

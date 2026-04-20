@@ -15,7 +15,6 @@ export function AppShell({ principal, children }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
-  // Auto-close mobile drawer on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
@@ -28,9 +27,9 @@ export function AppShell({ principal, children }: Props) {
         onClose={() => setMobileOpen(false)}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col h-full overflow-y-auto">
+      <div className="flex min-w-0 flex-1 flex-col h-full overflow-y-auto bg-[var(--app-bg)]">
         <MobileHeader onMenuToggle={() => setMobileOpen(true)} />
-        <main className="min-w-0 flex-1 overflow-x-hidden p-3 sm:p-4 enter-surface">
+        <main className="min-w-0 flex-1 overflow-x-hidden px-6 py-5 sm:px-8 sm:py-6 enter-surface">
           {children}
         </main>
       </div>

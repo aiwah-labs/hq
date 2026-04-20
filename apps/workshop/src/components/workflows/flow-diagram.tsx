@@ -311,7 +311,7 @@ function FlowNodeCard({
   isSelected?: boolean;
   onClick?: () => void;
 }) {
-  const color = node.annotation.color ?? '#6b7280';
+  const color = node.annotation?.color ?? '#6b7280';
   const hasExec = !!exec;
   const outputSummary = exec?.output != null ? summarizeOutput(exec.output) : null;
   const evals = exec?.evals ?? [];
@@ -323,8 +323,8 @@ function FlowNodeCard({
         hasExec && exec.status === 'FAILED' && 'border-red-500/40 bg-red-500/[0.03]',
         hasExec && exec.status === 'COMPLETED' && 'border-emerald-500/30 bg-emerald-500/[0.02]',
         hasExec && exec.status === 'RUNNING' && 'border-brand-teal/40 bg-brand-teal/[0.03]',
-        hasExec && exec.status === 'SKIPPED' && 'border-[var(--app-border)] opacity-50',
-        !hasExec && 'border-[var(--app-border)] bg-[var(--app-bg-elevated)]',
+        hasExec && exec.status === 'SKIPPED' && 'border-[#e6e8eb] opacity-50',
+        !hasExec && 'border-[#e6e8eb] bg-[#ffffff]',
         onClick && 'cursor-pointer hover:shadow-md',
         isSelected && 'ring-2 ring-brand-teal ring-offset-1 ring-offset-[var(--app-bg)]',
       )}
@@ -338,13 +338,13 @@ function FlowNodeCard({
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white"
             style={{ backgroundColor: color }}
           >
-            {getIcon(node.annotation.icon)}
+            {getIcon(node.annotation?.icon)}
           </div>
 
           {/* Content */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-[13px] font-semibold truncate">{node.annotation.label}</span>
+              <span className="text-[13px] font-semibold truncate">{node.annotation?.label ?? node.id}</span>
               {isEntry && <Badge tone="teal" className="text-[9px]">trigger</Badge>}
             </div>
             <span className="text-[11px] text-muted">
@@ -369,7 +369,7 @@ function FlowNodeCard({
 
         {/* Output summary — always visible when execution data exists */}
         {showData && outputSummary && (
-          <div className="mt-2 rounded-md bg-[var(--app-input-bg)] px-2.5 py-1.5">
+          <div className="mt-2 rounded-md bg-[#ffffff] px-2.5 py-1.5">
             <p className="text-[11px] text-muted font-mono leading-relaxed truncate">{outputSummary}</p>
           </div>
         )}
@@ -410,8 +410,8 @@ function FlowNodeCard({
 function Connector() {
   return (
     <div className="flex flex-col items-center py-0.5">
-      <div className="h-5 w-px bg-[var(--app-border)]" />
-      <ChevronDown className="h-3 w-3 text-[var(--app-border)] -mt-0.5" />
+      <div className="h-5 w-px bg-[#e6e8eb]" />
+      <ChevronDown className="h-3 w-3 text-[#e6e8eb] -mt-0.5" />
     </div>
   );
 }
@@ -441,17 +441,17 @@ function BranchFork({
           <div key={bi} className="flex flex-col items-center min-w-0 flex-1 max-w-[420px]">
             {/* Branch label */}
             <div className="flex flex-col items-center mb-1">
-              <div className="h-3 w-px bg-[var(--app-border)]" />
+              <div className="h-3 w-px bg-[#e6e8eb]" />
               <span className={cn(
                 'rounded-full border px-2 py-0.5 text-[10px] font-medium',
                 branch.label === 'true' ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5' :
                 branch.label === 'false' ? 'border-red-500/30 text-red-500 dark:text-red-400 bg-red-500/5' :
-                'border-[var(--app-border)] text-muted bg-[var(--app-bg-elevated)]'
+                'border-[#e6e8eb] text-muted bg-[#ffffff]'
               )}>
                 {branch.label}
               </span>
-              <div className="h-2 w-px bg-[var(--app-border)]" />
-              <ChevronDown className="h-3 w-3 text-[var(--app-border)] -mt-0.5" />
+              <div className="h-2 w-px bg-[#e6e8eb]" />
+              <ChevronDown className="h-3 w-3 text-[#e6e8eb] -mt-0.5" />
             </div>
 
             {/* Branch nodes */}

@@ -61,7 +61,7 @@ export async function loginAction(formData: FormData): Promise<never> {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
 
-  return redirect('/workshop');
+  return redirect('/dashboard');
 }
 
 export async function logoutAction(): Promise<never> {

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requirePermission } from '@/lib/auth';
 import { ROUTE_PERMISSIONS } from '@/lib/access';
 import { dispatchAction } from '@hq/actions';
+import { EmptyState } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,67 +13,64 @@ export default async function BlockedTasksPage() {
   const tasks: any[] = outcome.ok && 'result' in outcome ? (outcome.result as any).tasks ?? [] : [];
 
   return (
-    <div className="flex h-full flex-col" data-testid="projects-blocked">
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
-        <div>
-          <h1 className="text-[18px] font-semibold text-[var(--fg)]">Blocked tasks</h1>
-          <p className="mt-0.5 text-[13px] text-[var(--muted)]">
-            Every task currently in BLOCKED state — sorted by most recently updated.
-          </p>
+    <div className="space-y-4" data-testid="projects-blocked">
+      {/* Header */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <span className="font-medium">Home</span>
+          <span className="text-[#d0d6e0]">/</span>
+          <Link href="/projects" className="hover:text-[#0f1011] transition-colors">Projects</Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <span>Blocked</span>
         </div>
-        <Link
-          href="/projects"
-          className="text-[13px] font-medium text-[var(--accent)] hover:underline"
-        >
-          ← Back to overview
-        </Link>
+        <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]">Blocked tasks</h1>
+        <p className="mt-2 text-[12.5px] text-[#62666d]">
+          Every task currently in BLOCKED state — sorted by most recently updated.
+        </p>
       </div>
 
-      <table className="w-full text-[13px]" data-testid="blocked-table">
-        <thead className="bg-[var(--surface)]">
-          <tr className="text-left text-[12px] uppercase tracking-wide text-[var(--muted)]">
-            <th className="px-6 py-2">Task</th>
-            <th className="px-3 py-2">Project</th>
-            <th className="px-3 py-2">Assignee</th>
-            <th className="px-3 py-2">Reason</th>
-            <th className="px-3 py-2">Priority</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[var(--border)]">
-          {tasks.map((t) => (
-            <tr key={t.id} data-testid={`blocked-row-${t.id}`}>
-              <td className="px-6 py-2">
-                <Link href={`/objects/Task/${t.id}`} className="font-medium text-[var(--fg)] hover:underline">
-                  {t.title}
-                </Link>
-              </td>
-              <td className="px-3 py-2">
-                {t.project ? (
-                  <Link href={`/objects/Project/${t.project.id}`} className="text-[var(--muted)] hover:underline">
-                    {t.project.name}
-                  </Link>
-                ) : (
-                  <span className="text-[var(--muted)]">—</span>
-                )}
-              </td>
-              <td className="px-3 py-2">
-                <span className="text-[var(--muted)]">
-                  {t.assignee?.name ?? t.assignee?.email ?? 'Unassigned'}
-                </span>
-              </td>
-              <td className="px-3 py-2 text-[var(--fg)]">{t.blockedReason ?? '—'}</td>
-              <td className="px-3 py-2 uppercase text-[12px] text-[var(--muted)]">{t.priority}</td>
-            </tr>
-          ))}
-          {tasks.length === 0 && (
-            <tr>
-              <td colSpan={5} className="px-6 py-4 text-[13px] text-[var(--muted)]">
-                Nothing is blocked right now. 🎉
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+        {tasks.length === 0 ? (
+          <EmptyState title="Nothing is blocked right now" description="All tasks are moving freely." />
+        ) : (
+          <table className="w-full text-[13px]" data-testid="blocked-table">
+            <thead>
+              <tr className="border-b border-[#e6e8eb] bg-[#fafbfb] text-left">
+                <th className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">Task</th>
+                <th className="px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">Project</th>
+                <th className="px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">Assignee</th>
+                <th className="px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">Reason</th>
+                <th className="px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">Priority</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eff0f2]">
+              {tasks.map((t) => (
+                <tr key={t.id} className="hover:bg-[#fafbfb] transition-colors duration-100" data-testid={`blocked-row-${t.id}`}>
+                  <td className="px-4 py-2.5">
+                    <Link href={`/projects/${t.project?.id ?? ''}`} className="text-[12.5px] font-medium text-[#0f1011] hover:text-[#009E85] transition-colors">
+                      {t.title}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    {t.project ? (
+                      <Link href={`/projects/${t.project.id}`} className="text-[12px] text-[#62666d] hover:text-[#0f1011] transition-colors">
+                        {t.project.name}
+                      </Link>
+                    ) : (
+                      <span className="text-[12px] text-[#8a8f98]">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-[12px] text-[#62666d]">
+                    {t.assignee?.name ?? t.assignee?.email ?? 'Unassigned'}
+                  </td>
+                  <td className="px-3 py-2.5 text-[12px] text-[#0f1011]">{t.blockedReason ?? '—'}</td>
+                  <td className="px-3 py-2.5 text-[11px] uppercase tracking-[0.04em] text-[#62666d]">{t.priority}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

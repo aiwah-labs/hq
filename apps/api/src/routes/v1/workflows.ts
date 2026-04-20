@@ -28,14 +28,17 @@ export async function registerWorkflowRoutes(app: FastifyInstance) {
     });
     const runCountMap = new Map(runCounts.map((r) => [r.workflowKey, r._count.id]));
 
-    // Last run per workflow
-    const lastRuns = await db.workflowRun.findMany({
+    // Last run per workflow — distinct + orderBy on different fields isn't supported by Prisma,
+    // so we fetch all ordered runs and deduplicate in JS.
+    const allRecentRuns = await db.workflowRun.findMany({
       where: { workflowKey: { in: workflows.map((w) => w.key) } },
-      orderBy: { createdAt: 'desc' },
-      distinct: ['workflowKey'],
+      orderBy: { startedAt: 'desc' },
       select: { workflowKey: true, id: true, status: true, startedAt: true },
     });
-    const lastRunMap = new Map(lastRuns.map((r) => [r.workflowKey, r]));
+    const lastRunMap = new Map<string, (typeof allRecentRuns)[0]>();
+    for (const run of allRecentRuns) {
+      if (!lastRunMap.has(run.workflowKey)) lastRunMap.set(run.workflowKey, run);
+    }
 
     return workflows.map((def) => ({
       ...serializeWorkflowDef(def),
@@ -55,7 +58,7 @@ export async function registerWorkflowRoutes(app: FastifyInstance) {
 
     const recentRuns = await db.workflowRun.findMany({
       where: { workflowKey: key },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { startedAt: 'desc' },
       take: 10,
       include: { _count: { select: { steps: true } } },
     });

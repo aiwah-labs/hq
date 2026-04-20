@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { AiwahApiClient } from '@hq/api-client';
+import type { HQApiClient } from '@hq/api-client';
 import { asText, toMcpError } from '../util.js';
 
-export function registerNoteTools(server: McpServer, client: AiwahApiClient): void {
+export function registerNoteTools(server: McpServer, client: HQApiClient): void {
   server.tool(
     'note.list',
     'List notes. Optionally filter by text search query, tag, or pinned status.',

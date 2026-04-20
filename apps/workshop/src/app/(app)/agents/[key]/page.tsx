@@ -1,11 +1,10 @@
-import { Badge, Button, Card, CardBody, CardHeader, Table, TableWrap, TBody, TD, TH, THead, TR } from '@/components/ui';
+import { StatusDot, Button, Card, CardBody, EmptyState, Table, TableWrap, TBody, TD, TH, THead, TR } from '@/components/ui';
 import { requirePermission } from '@/lib/auth';
 import { ROUTE_PERMISSIONS } from '@/lib/access';
 import { getSessionApiClient } from '@/lib/api-client';
 import Link from 'next/link';
-import { ArrowLeft, Play, Power, PowerOff, Clock, Zap, MessageSquare, Calendar, Bot } from 'lucide-react';
+import { Play, Power, PowerOff, Bot } from 'lucide-react';
 import { enableAgentAction, disableAgentAction, triggerAgentAction } from './actions';
-import { actionRegistry, serializeAction } from '@hq/actions';
 
 function formatDate(d: string | Date | null): string {
   if (!d) return '—';
@@ -27,147 +26,128 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ ke
   const threadsRes = await api.get<any>(`/v1/agents/${encodeURIComponent(key)}/threads?limit=20`);
   const threads = threadsRes.data ?? threadsRes ?? [];
 
+  const threadCount = Array.isArray(threads) ? threads.length : 0;
+
   return (
-    <section className="mx-auto max-w-5xl space-y-6 px-6 py-8" data-testid="agent-detail-page">
+    <div className="space-y-4" data-testid="agent-detail-page">
       {/* Header */}
-      <header>
-        <Link href="/agents" className="mb-3 inline-flex items-center gap-1 text-[12px] text-[var(--app-muted)] hover:text-[var(--app-fg)]" data-testid="link-back-agents">
-          <ArrowLeft className="h-3.5 w-3.5" /> All Agents
-        </Link>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-teal/10 text-brand-teal">
-              <Bot className="h-5 w-5" />
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-[#8a8f98]">
+          <Link href="/agents" className="font-medium hover:text-[#3d4149] transition-colors" data-testid="link-back-agents">
+            Agents
+          </Link>
+          <span className="text-[#d0d6e0]">/</span>
+          <span className="truncate">{agent.name}</span>
+        </div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#E0F7F3] text-[#009E85]">
+              <Bot size={12} />
             </span>
-            <div>
-              <h1 className="text-[18px] font-semibold" data-testid="agent-name">{agent.name}</h1>
-              <p className="text-[12px] text-[var(--app-muted)]">{agent.description}</p>
+            <div className="min-w-0">
+              <h1 className="text-[20px] font-semibold leading-none tracking-[-0.01em] text-[#0f1011]" data-testid="agent-name">
+                {agent.name}
+              </h1>
+              {agent.description && (
+                <p className="mt-1.5 text-[12.5px] text-[#62666d]">{agent.description}</p>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0 pt-0.5">
             <form action={agent.enabled ? disableAgentAction.bind(null, key) : enableAgentAction.bind(null, key)}>
               <Button
-                variant={agent.enabled ? 'ghost' : 'primary'}
+                variant="outline"
                 size="sm"
                 type="submit"
                 data-testid="btn-toggle-agent"
-                aria-label={agent.enabled ? 'Disable agent' : 'Enable agent'}
               >
-                {agent.enabled ? <PowerOff className="h-3.5 w-3.5" /> : <Power className="h-3.5 w-3.5" />}
+                {agent.enabled ? <PowerOff size={12} /> : <Power size={12} />}
                 {agent.enabled ? 'Disable' : 'Enable'}
               </Button>
             </form>
             <form action={triggerAgentAction.bind(null, key)}>
-              <Button variant="secondary" size="sm" type="submit" data-testid="btn-trigger-agent" aria-label="Trigger agent manually">
-                <Play className="h-3.5 w-3.5" /> Trigger
+              <Button variant="primary" size="sm" type="submit" data-testid="btn-trigger-agent">
+                <Play size={12} /> Trigger
               </Button>
             </form>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Config */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card data-testid="card-model">
-          <CardBody>
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Model</p>
-            <p className="mt-1 font-mono text-[13px]">{agent.model}</p>
-          </CardBody>
-        </Card>
-        <Card data-testid="card-max-steps">
-          <CardBody>
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Max Steps</p>
-            <p className="mt-1 text-[13px]">{agent.maxSteps ?? 20}</p>
-          </CardBody>
-        </Card>
+      {/* Stat row */}
+      <div className="flex items-stretch overflow-hidden rounded-lg border border-[#e6e8eb] bg-white">
+        {[
+          { label: 'Status', value: agent.enabled ? 'Enabled' : 'Disabled' },
+          { label: 'Model', value: agent.model ?? '—' },
+          { label: 'Max steps', value: agent.maxSteps ?? 20 },
+          { label: 'Threads', value: threadCount },
+        ].map((s, i) => (
+          <div key={s.label} className={`flex-1 px-4 py-3${i > 0 ? ' border-l border-[#e6e8eb]' : ''}`}>
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.04em] text-[#8a8f98]">{s.label}</p>
+            <p className="mt-1 text-[18px] font-semibold leading-none tabular-nums tracking-tight text-[#0f1011]">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Triggers + scopes */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {/* Triggers */}
         <Card data-testid="card-triggers">
+          <div className="border-b border-[#e6e8eb] px-4 py-2.5">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Triggers</h2>
+          </div>
           <CardBody>
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Triggers</p>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {(agent.triggers ?? []).map((t: any, i: number) => (
-                <Badge key={i} tone="teal">{t.type}{t.mode ? `:${t.mode}` : ''}{t.eventType ? `:${t.eventType}` : ''}</Badge>
+            <div className="flex flex-wrap gap-1.5">
+              {((agent.triggers ?? agent.defaultTriggers) ?? []).map((t: any, i: number) => (
+                <span key={i} className="inline-flex items-center rounded bg-[#f3f4f5] px-1.5 py-0.5 text-[10.5px] font-medium text-[#62666d]">
+                  {t.type}{t.mode ? `:${t.mode}` : ''}{t.eventType ? `:${t.eventType}` : ''}
+                </span>
               ))}
             </div>
           </CardBody>
         </Card>
-        <Card data-testid="card-status">
-          <CardBody>
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Status</p>
-            <Badge tone={agent.enabled ? 'success' : 'neutral'} className="mt-1">
-              {agent.enabled ? 'ENABLED' : 'DISABLED'}
-            </Badge>
-          </CardBody>
-        </Card>
-      </div>
 
-      {/* Capabilities */}
-      {agent.resolvedActions?.length > 0 && (() => {
-        const rows = (agent.resolvedActions as string[]).map((name) => {
-          const action = actionRegistry.get(name);
-          return action ? serializeAction(action) : null;
-        }).filter(Boolean) as ReturnType<typeof serializeAction>[];
-        const reads = Array.from(new Set(rows.flatMap((r) => r.objects?.reads ?? [])));
-        const writes = Array.from(new Set(rows.flatMap((r) => r.objects?.writes ?? [])));
-        const deletes = Array.from(new Set(rows.flatMap((r) => r.objects?.deletes ?? [])));
-        const riskCounts = { low: 0, medium: 0, high: 0 };
-        rows.forEach((r) => { riskCounts[r.risk]++; });
-        const gated = rows.filter((r) => r.approval?.required);
-        return (
-          <Card data-testid="card-capabilities">
-            <CardHeader>Capabilities ({rows.length} actions)</CardHeader>
+        {/* Scopes */}
+        {(agent.scopes ?? []).length > 0 && (
+          <Card data-testid="card-scopes">
+            <div className="border-b border-[#e6e8eb] px-4 py-2.5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Scopes</h2>
+            </div>
             <CardBody>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Reads</p>
-                  <p className="mt-1 text-[13px]">{reads.join(', ') || '—'}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Writes</p>
-                  <p className="mt-1 text-[13px]">{writes.join(', ') || '—'}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--app-muted)]">Deletes</p>
-                  <p className="mt-1 text-[13px]">{deletes.join(', ') || '—'}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-[12px]">
-                <Badge tone="neutral">low: {riskCounts.low}</Badge>
-                <Badge tone="teal">medium: {riskCounts.medium}</Badge>
-                <Badge tone="success">high: {riskCounts.high}</Badge>
-                {gated.length > 0 && <Badge tone="neutral">approval required: {gated.length}</Badge>}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {rows.map((r) => (
-                  <span
-                    key={r.name}
-                    title={`${r.risk}${r.approval?.required ? ' · approval required' : ''}`}
-                    className="rounded-full border border-[var(--app-border)] bg-[var(--app-bg-elevated)] px-2.5 py-0.5 font-mono text-[11px]"
-                  >
-                    {r.name}
-                    {r.approval?.required ? ' ·⚑' : ''}
+              <div className="flex flex-wrap gap-1.5">
+                {(agent.scopes as string[]).map((s: string) => (
+                  <span key={s} className="rounded bg-[#f3f4f5] px-1.5 py-0.5 font-mono text-[10.5px] text-[#62666d]">
+                    {s}
                   </span>
                 ))}
               </div>
             </CardBody>
           </Card>
-        );
-      })()}
+        )}
+      </div>
 
       {/* Threads */}
-      <Card data-testid="card-threads">
-        <CardHeader>Threads ({Array.isArray(threads) ? threads.length : 0})</CardHeader>
-        <CardBody className="p-0">
-          {(!Array.isArray(threads) || threads.length === 0) ? (
-            <p className="px-4 py-8 text-center text-[13px] text-[var(--app-muted)]">No threads yet. Trigger the agent to start a conversation.</p>
+      <div>
+        <div className="mb-2.5 flex items-baseline gap-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#0f1011]">Threads</h2>
+          <p className="text-[11px] text-[#8a8f98]">&mdash; {threadCount} recent</p>
+        </div>
+
+        <div className="overflow-hidden rounded-lg border border-[#e6e8eb] bg-white" data-testid="card-threads">
+          {!Array.isArray(threads) || threadCount === 0 ? (
+            <EmptyState
+              title="No threads yet"
+              description="Trigger the agent to start a conversation."
+            />
           ) : (
             <TableWrap>
               <Table>
                 <THead>
                   <TR>
-                    <TH>Thread ID</TH>
+                    <TH>Thread</TH>
                     <TH>Channel</TH>
                     <TH>Messages</TH>
-                    <TH>Last Active</TH>
+                    <TH>Last active</TH>
                     <TH>Status</TH>
                   </TR>
                 </THead>
@@ -177,24 +157,29 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ ke
                       <TD>
                         <Link
                           href={`/agents/${encodeURIComponent(key)}/threads/${t.id}`}
-                          className="font-mono text-[12px] text-brand-teal hover:underline"
+                          className="font-mono text-[12px] text-[#009E85] hover:text-[#007A66] transition-colors"
                           data-testid={`link-thread-${t.id}`}
                         >
                           {t.id.slice(0, 12)}…
                         </Link>
                       </TD>
-                      <TD className="text-[12px] text-[var(--app-muted)]">{t.channelRef ?? '—'}</TD>
-                      <TD className="text-[12px]">{(t.messages as any[])?.length ?? 0}</TD>
-                      <TD className="text-[12px] text-[var(--app-muted)]">{formatDate(t.updatedAt)}</TD>
-                      <TD><Badge tone={t.status === 'active' ? 'success' : 'neutral'}>{t.status}</Badge></TD>
+                      <TD className="text-[12px] text-[#62666d]">{t.channelRef ?? '—'}</TD>
+                      <TD className="text-[12px] tabular-nums">{(t.messages as any[])?.length ?? 0}</TD>
+                      <TD className="text-[12px] text-[#8a8f98]">{formatDate(t.updatedAt)}</TD>
+                      <TD>
+                        <StatusDot
+                          tone={t.status === 'active' ? 'success' : 'neutral'}
+                          label={t.status}
+                        />
+                      </TD>
                     </TR>
                   ))}
                 </TBody>
               </Table>
             </TableWrap>
           )}
-        </CardBody>
-      </Card>
-    </section>
+        </div>
+      </div>
+    </div>
   );
 }
